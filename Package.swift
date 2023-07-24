@@ -32,7 +32,9 @@ let package = Package(
         ),
 
         // Library that exposes a macro as part of its API, which is used in client programs.
-        .target(name: "ReactBridge", dependencies: ["ReactBridgeMacros"]),
+        .target(name: "ReactBridge", dependencies: ["ReactBridgeMacros", "RegisterModules"]),
+        
+        .target(name: "RegisterModules"),
 
         // A test target used to develop the macro implementation.
         .testTarget(
