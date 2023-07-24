@@ -20,9 +20,9 @@ class A: NSObject {
 
 final class ReactBridgeTests: XCTestCase {
   let testMacros: [String: Macro.Type] = [
-    "ReactModule": ReactModuleMacro.self,
-    "ReactMethod": ReactMethodMacro.self,
-    "ReactViewProperty": ReactViewPropertyMacro.self
+    "ReactModule": ReactModule.self,
+    "ReactMethod": ReactMethod.self,
+    "ReactViewProperty": ReactViewProperty.self
   ]
   
   func testReactModule() {
