@@ -48,6 +48,51 @@ func arguments(node: AttributeSyntax) -> [String : String] {
   return result
 }
 
+struct ObjcType {
+  let objcType: String
+  let swiftTypes: [String]
+  let custom: ((String) -> Bool)?
+  
+  func isEqual(swiftType: String) -> Bool {
+    objcType == swiftType || swiftTypes.contains(swiftType) || custom?(swiftType) == true
+  }
+  
+  init(objcType: String, swiftTypes: [String] = [], custom: ((String) -> Bool)? = nil) {
+    self.objcType = objcType
+    self.swiftTypes = swiftTypes
+    self.custom = custom
+  }
+}
+
+let objcTypes: [ObjcType] = [
+  ObjcType(objcType: "NSString", swiftTypes: ["String"]),
+  ObjcType(objcType: "BOOL", swiftTypes: ["Bool"]),
+  ObjcType(objcType: "NSInteger", swiftTypes: ["Int", "Int8", "Int16", "Int32", "Int64"]),
+  ObjcType(objcType: "NSUInteger", swiftTypes: ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"]),
+  ObjcType(objcType: "NSNumber"),
+  ObjcType(objcType: "GCFloat", swiftTypes: ["Float"]),
+  ObjcType(objcType: "double", swiftTypes: ["Double"]),
+  ObjcType(objcType: "NSArray", swiftTypes: ["NSMutableArray"], custom: {
+    $0.hasPrefix("Array<") || ($0.hasPrefix("[") && !$0.contains(":") && $0.hasSuffix("]"))
+  }),
+  ObjcType(objcType: "NSDictionary", swiftTypes: ["NSMutableDictionary"], custom: {
+    $0.hasPrefix("Dictionary<") || ($0.hasPrefix("[") && $0.contains(":") && $0.hasSuffix("]"))
+  }),
+  ObjcType(objcType: "RCTResponseSenderBlock"),
+  ObjcType(objcType: "RCTResponseErrorBlock"),
+  ObjcType(objcType: "RCTPromiseResolveBlock"),
+  ObjcType(objcType: "RCTPromiseRejectBlock"),
+  ObjcType(objcType: "NSObject"),
+  ObjcType(objcType: "id", swiftTypes: ["Any", "AnyObject"]),
+]
+
+func convertType(swiftType: String) -> String? {
+  let optionalSet = CharacterSet(["?", "!"])
+  let type = swiftType.trimmingCharacters(in: optionalSet)
+  let first = objcTypes.first { $0.isEqual(swiftType: type) }
+  return first?.objcType
+}
+
 @main
 struct ReactBridgePlugin: CompilerPlugin {
   let providingMacros: [Macro.Type] = [

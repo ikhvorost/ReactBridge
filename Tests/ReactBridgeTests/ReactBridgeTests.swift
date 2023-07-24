@@ -10,12 +10,11 @@ import ReactBridge
 class A: NSObject {
   
   @ReactMethod
-  @objc func hello(_ t: String, b: Bool) {
-    print("Hello!")
+  func hello(_ text: String, flag: Bool, value: NSObject) {
   }
   
   @ReactViewProperty
-  @objc var name: String?
+  var name: [String : String]?
 }
 
 final class ReactBridgeTests: XCTestCase {
@@ -30,15 +29,21 @@ final class ReactBridgeTests: XCTestCase {
     assertMacroExpansion(
       """
       @ReactModule
-      class A {
-          @ReactMethod(jsName: "hello", isSync: true)
-          func hello() {}
-      
-          @ReactViewProperty
-          var name: String?
+      class A: NSObject {
       }
       """,
-      expandedSource: """
+      expandedSource:
+      """
+      class A: NSObject {
+          @objc static func moduleName() -> String! {
+            String(describing: self)
+          }
+          @objc static func _registerModule() {
+            RCTRegisterModule(self);
+          }
+      }
+      extension A: RCTBridgeModule {
+      }
       """,
       macros: testMacros
     )

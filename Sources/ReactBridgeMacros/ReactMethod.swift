@@ -58,20 +58,29 @@ extension ReactMethod: PeerMacro {
     }
     
     var objcName = funcDecl.identifier.text
+    var varName = "_\(objcName)"
+    
     // Parameter list
     let parameterList = funcDecl.signature.input.parameterList
-    if parameterList.count > 0 {
-      objcName += ":"
-      for item in parameterList {
-        guard item != parameterList.first else {
-          continue
-        }
-        let firstName = item.firstName.description.trimmingCharacters(in: .whitespaces)
-        objcName += "\(firstName):"
+    for item in parameterList {
+      let firstName = item.firstName.description.trimmingCharacters(in: .whitespaces)
+      
+      let swiftType = item.type.description
+      guard let objcType = convertType(swiftType: swiftType) else {
+        throw "Unsupported parameter type: \(swiftType)"
       }
+      
+      if item == parameterList.first {
+        guard firstName == "_" else {
+          throw "First parameter name must be \"_\"."
+        }
+        objcName += ":(\(objcType))_"
+      }
+      else {
+        objcName += " \(firstName):(\(objcType))\(firstName)"
+      }
+      varName += "_\(firstName)"
     }
-    
-    let varName = "_" + objcName.replacingOccurrences(of: ":", with: "_")
     
     let arguments = arguments(node: node)
     let jsName = arguments["jsName"] ?? ""

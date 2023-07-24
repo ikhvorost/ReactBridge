@@ -32,26 +32,10 @@ public struct ReactViewProperty {
 
 extension ReactViewProperty: PeerMacro {
   
-  private static func objcType(type: String) -> String {
-    if type.contains("String") {
-      return "NSString"
-    }
-    else if type.contains("Bool") {
-      return "BOOL"
-    }
-    else if type.contains("Int") || type.contains("Float") || type.contains("Double") {
-      return "NSNumber"
-    }
-    else if type.contains("[") {
-      return type.contains(":") ? "NSDictionary" : "NSArray"
-    }
-    return type
-  }
-  
-  private static func propConfig(name: String, type: String) -> String {
+  private static func propConfig(name: String, objcType: String) -> String {
     """
     @objc static func propConfig_\(name)() -> [String] {
-      ["\(objcType(type: type))"]
+      ["\(objcType)"]
     }
     """
   }
@@ -67,11 +51,15 @@ extension ReactViewProperty: PeerMacro {
     
     guard let pattern = varDecl.bindings.first?.as(PatternBindingSyntax.self),
           let name = pattern.pattern.as(IdentifierPatternSyntax.self)?.identifier.description,
-          let type = pattern.typeAnnotation?.type.description
+          let swiftType = pattern.typeAnnotation?.type.description
     else {
       throw "@\(self) only works on variables."
     }
     
-    return [DeclSyntax(stringLiteral: propConfig(name: name, type: type))]
+    guard let objcType = convertType(swiftType: swiftType) else {
+      throw "Unsupported variable type: \(swiftType)."
+    }
+    
+    return [DeclSyntax(stringLiteral: propConfig(name: name, objcType: objcType))]
   }
 }
