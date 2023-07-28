@@ -28,24 +28,33 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import Foundation
 
-
-extension String: LocalizedError {
-  public var errorDescription: String? { self }
+extension CharacterSet {
+  static let whitespacesAndQuotes = CharacterSet(charactersIn: " \"")
+  static let optionalSigns = CharacterSet(charactersIn: "?!")
 }
 
-func arguments(node: AttributeSyntax) -> [String : String] {
-  var result = [String : String]()
+extension String: LocalizedError {
+  // Error
+  public var errorDescription: String? { self }
   
-  if let list = node.argument?.as(TupleExprElementListSyntax.self) {
-    for item in list {
-      guard let name = item.label?.text else {
-        continue
-      }
-      let value = item.expression.description.replacingOccurrences(of: "\"", with: "")
-      result[name] = value
-    }
+  var trimmed: String {
+    trimmingCharacters(in: .whitespacesAndQuotes)
   }
-  return result
+}
+
+extension AttributeSyntax {
+  
+  func arguments() -> [String : String]? {
+    argument?.as(TupleExprElementListSyntax.self)?
+      .compactMap {
+        guard let name = $0.label?.text else {
+          return nil
+        }
+        let value = $0.expression.description.trimmed
+        return [name : value]
+      }
+      .reduce([String : String](), { $0.merging($1) { _, new in new } })
+  }
 }
 
 struct ObjcType {
@@ -64,7 +73,7 @@ struct ObjcType {
   }
 }
 
-let objcTypes: [ObjcType] = [
+let supportedTypes: [ObjcType] = [
   ObjcType(objcType: "NSString", swiftTypes: ["String"]),
   ObjcType(objcType: "BOOL", swiftTypes: ["Bool"]),
   ObjcType(objcType: "NSInteger", swiftTypes: ["Int", "Int8", "Int16", "Int32", "Int64"]),
@@ -78,18 +87,24 @@ let objcTypes: [ObjcType] = [
   ObjcType(objcType: "NSDictionary", swiftTypes: ["NSMutableDictionary"], custom: {
     $0.hasPrefix("Dictionary<") || ($0.hasPrefix("[") && $0.contains(":") && $0.hasSuffix("]"))
   }),
+  ObjcType(objcType: "NSSet", swiftTypes: ["NSSet"], custom: { $0.hasPrefix("Set<") }),
   ObjcType(objcType: "RCTResponseSenderBlock"),
   ObjcType(objcType: "RCTResponseErrorBlock"),
   ObjcType(objcType: "RCTPromiseResolveBlock"),
   ObjcType(objcType: "RCTPromiseRejectBlock"),
   ObjcType(objcType: "NSObject"),
   ObjcType(objcType: "id", swiftTypes: ["Any", "AnyObject"]),
+  ObjcType(objcType: "NSDate", swiftTypes: ["Date"]),
+  ObjcType(objcType: "NSData", swiftTypes: ["Data"]),
+  ObjcType(objcType: "NSURL", swiftTypes: ["URL"]),
+  ObjcType(objcType: "NSURLRequest", swiftTypes: ["URLRequest"]),
+  ObjcType(objcType: "NSTimeInterval", swiftTypes: ["TimeInterval"]),
+  ObjcType(objcType: "CGPoint"),
 ]
 
 func convertType(swiftType: String) -> String? {
-  let optionalSet = CharacterSet(["?", "!"])
-  let type = swiftType.trimmingCharacters(in: optionalSet)
-  let first = objcTypes.first { $0.isEqual(swiftType: type) }
+  let type = swiftType.trimmingCharacters(in: .optionalSigns)
+  let first = supportedTypes.first { $0.isEqual(swiftType: type) }
   return first?.objcType
 }
 

@@ -57,15 +57,15 @@ extension ReactMethod: PeerMacro {
       throw "@\(self) only works on functions."
     }
     
-    var objcName = funcDecl.identifier.text
+    var objcName = funcDecl.identifier.text.trimmed
     var varName = "_\(objcName)"
     
     // Parameter list
     let parameterList = funcDecl.signature.input.parameterList
     for item in parameterList {
-      let firstName = item.firstName.description.trimmingCharacters(in: .whitespaces)
+      let firstName = item.firstName.description.trimmed
       
-      let swiftType = item.type.description
+      let swiftType = item.type.description.trimmed
       guard let objcType = convertType(swiftType: swiftType) else {
         throw "Unsupported parameter type: \(swiftType)"
       }
@@ -82,9 +82,9 @@ extension ReactMethod: PeerMacro {
       varName += "_\(firstName)"
     }
     
-    let arguments = arguments(node: node)
-    let jsName = arguments["jsName"] ?? ""
-    let isSync = arguments["isSync"] == "true"
+    let arguments = node.arguments()
+    let jsName = arguments?["jsName"] ?? ""
+    let isSync = arguments?["isSync"] == "true"
     
     let items = [
       methodInfo(varName: varName, jsName: jsName, objcName: objcName, isSync: isSync),

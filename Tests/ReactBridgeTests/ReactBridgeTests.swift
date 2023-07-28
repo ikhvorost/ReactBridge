@@ -5,24 +5,17 @@ import XCTest
 import ReactBridgeMacros
 import ReactBridge
 
+let macros: [String: Macro.Type] = [
+  "ReactModule": ReactModule.self,
+  "ReactMethod": ReactMethod.self,
+  "ReactViewProperty": ReactViewProperty.self
+]
 
-@ReactModule
+@ReactModule()
 class A: NSObject {
-  
-  @ReactMethod
-  func hello(_ text: String, flag: Bool, value: NSObject) {
-  }
-  
-  @ReactViewProperty
-  var name: [String : String]?
 }
 
-final class ReactBridgeTests: XCTestCase {
-  let testMacros: [String: Macro.Type] = [
-    "ReactModule": ReactModule.self,
-    "ReactMethod": ReactMethod.self,
-    "ReactViewProperty": ReactViewProperty.self
-  ]
+final class ReactModuleTests: XCTestCase {
   
   func testReactModule() {
     
@@ -36,7 +29,7 @@ final class ReactBridgeTests: XCTestCase {
       """
       class A: NSObject {
           @objc static func moduleName() -> String! {
-            String(describing: self)
+            "\\(self)"
           }
           @objc static func _registerModule() {
             RCTRegisterModule(self);
@@ -45,7 +38,7 @@ final class ReactBridgeTests: XCTestCase {
       extension A: RCTBridgeModule {
       }
       """,
-      macros: testMacros
+      macros: macros
     )
   }
 }

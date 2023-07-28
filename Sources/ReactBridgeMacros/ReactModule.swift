@@ -79,22 +79,28 @@ extension ReactModule: MemberMacro {
     in context: some MacroExpansionContext)
   throws -> [DeclSyntax]
   {
-    guard let _ = declaration.as(ClassDeclSyntax.self) else {
-      throw "@\(self) only works on classes."
+    // class
+    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+      throw "@\(self) works only on classes."
     }
     
-    let arguments = arguments(node: node)
+    // NSObject
+    guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+      throw "'\(classDecl.identifier.description.trimmed)' must be inherited from 'NSObject'."
+    }
+    
+    let arguments = node.arguments()
     
     var items: [String] = [
-      moduleName(name: arguments["jsName"]),
+      moduleName(name: arguments?["jsName"]),
       registerModule,
     ]
     
-    if let value = arguments["requiresMainQueueSetup"] {
+    if let value = arguments?["requiresMainQueueSetup"] {
       items.append(requiresMainQueueSetup(value: value))
     }
     
-    if let queue = arguments["methodQueue"] {
+    if let queue = arguments?["methodQueue"] {
       items.append(methodQueue(queue: queue))
     }
     

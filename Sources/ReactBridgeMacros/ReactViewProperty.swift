@@ -50,8 +50,8 @@ extension ReactViewProperty: PeerMacro {
     }
     
     guard let pattern = varDecl.bindings.first?.as(PatternBindingSyntax.self),
-          let name = pattern.pattern.as(IdentifierPatternSyntax.self)?.identifier.description,
-          let swiftType = pattern.typeAnnotation?.type.description
+          let name = pattern.pattern.as(IdentifierPatternSyntax.self)?.identifier.description.trimmed,
+          let swiftType = pattern.typeAnnotation?.type.description.trimmed
     else {
       throw "@\(self) only works on variables."
     }

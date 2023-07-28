@@ -27,7 +27,11 @@ import Foundation
 
 @attached(conformance)
 @attached(member, names: named(moduleName), named(_registerModule), named(requiresMainQueueSetup), named(methodQueue))
-public macro ReactModule(jsName: String? = nil, requiresMainQueueSetup: Bool = false, methodQueue: DispatchQueue? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactModule")
+public macro ReactModule(
+  jsName: String? = nil,
+  requiresMainQueueSetup: Bool = false,
+  methodQueue: DispatchQueue? = nil
+) = #externalMacro(module: "ReactBridgeMacros", type: "ReactModule")
 
 @attached(peer, names: arbitrary)
 public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactMethod")
