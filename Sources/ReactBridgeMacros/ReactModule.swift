@@ -45,7 +45,7 @@ extension ReactModule: MemberMacro {
   private static func moduleName(name: String?) -> String {
     """
     @objc static func moduleName() -> String! {
-      \(name != nil ? "\(name!)" : "String(describing: self)")
+      "\(name ?? "\\(self)")"
     }
     """
   }
@@ -57,31 +57,45 @@ extension ReactModule: MemberMacro {
     }
     """
   
-  private static let requiresMainQueueSetup =
+  private static func requiresMainQueueSetup(value: String) -> String {
     """
     @objc static func requiresMainQueueSetup() -> Bool {
-      return true
+      \(value)
     }
     """
+  }
+  
+  private static func methodQueue(queue: String) -> String {
+    """
+    @objc func methodQueue() -> DispatchQueue {
+      \(queue)
+    }
+    """
+  }
   
   public static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)
-  throws -> [DeclSyntax] {
+  throws -> [DeclSyntax]
+  {
     guard let _ = declaration.as(ClassDeclSyntax.self) else {
       throw "@\(self) only works on classes."
     }
     
     let arguments = arguments(node: node)
     
-    var items = [
+    var items: [String] = [
       moduleName(name: arguments["jsName"]),
       registerModule,
     ]
     
-    if arguments["isMainQueue"] == "true" {
-      items.append(requiresMainQueueSetup)
+    if let value = arguments["requiresMainQueueSetup"] {
+      items.append(requiresMainQueueSetup(value: value))
+    }
+    
+    if let queue = arguments["methodQueue"] {
+      items.append(methodQueue(queue: queue))
     }
     
     return items.map { DeclSyntax(stringLiteral: $0) }
