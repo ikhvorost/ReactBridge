@@ -25,8 +25,49 @@
 
 import SwiftSyntax
 import SwiftSyntaxMacros
+import SwiftDiagnostics
+
 
 public struct ReactModule {
+  
+  enum Error: DiagnosticMessage {
+    case classOnly
+    case inheritNSObject(name: String)
+    
+    var severity: DiagnosticSeverity { .error }
+    
+    var message: String {
+      switch self {
+        case .classOnly:
+          return "@ReactModule can only be applied to a class"
+        case .inheritNSObject(let name):
+          return String(format: "'%@' must inherit 'NSObject'", name)
+      }
+    }
+    
+    var diagnosticID: MessageID {
+      MessageID(domain: "ReactModule", id: message)
+    }
+  }
+  
+  static func diagnose(node: AttributeSyntax, declaration: DeclGroupSyntax, context: MacroExpansionContext) -> Bool {
+    // class
+    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+      let error = Diagnostic(node: node._syntaxNode, message: Error.classOnly)
+      context.diagnose(error)
+      return false
+    }
+    
+    // NSObject
+    guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+      let name = classDecl.identifier.description.trimmed
+      let error = Diagnostic(node: node._syntaxNode, message: Error.inheritNSObject(name: name))
+      context.diagnose(error)
+      return false
+    }
+    
+    return true
+  }
 }
 
 extension ReactModule: ConformanceMacro {
@@ -34,41 +75,44 @@ extension ReactModule: ConformanceMacro {
     of node: AttributeSyntax,
     providingConformancesOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)
-  throws -> [(TypeSyntax, GenericWhereClauseSyntax?)] {
-    let syntax = TypeSyntax(stringLiteral: "RCTBridgeModule")
-    return [( syntax, nil )]
+  throws -> [(TypeSyntax, GenericWhereClauseSyntax?)]
+  {
+    guard diagnose(node: node, declaration: declaration, context: context) else {
+      return []
+    }
+    return [( "RCTBridgeModule", nil )]
   }
 }
 
 extension ReactModule: MemberMacro {
   
-  private static func moduleName(name: String?) -> String {
+  private static func moduleName(name: String?) -> DeclSyntax {
     """
     @objc static func moduleName() -> String! {
-      "\(name ?? "\\(self)")"
+      "\(raw: name ?? "\\(self)")"
     }
     """
   }
   
-  private static let registerModule =
+  private static let registerModule: DeclSyntax =
     """
     @objc static func _registerModule() {
       RCTRegisterModule(self);
     }
     """
   
-  private static func requiresMainQueueSetup(value: String) -> String {
+  private static func requiresMainQueueSetup(value: String) -> DeclSyntax {
     """
     @objc static func requiresMainQueueSetup() -> Bool {
-      \(value)
+      \(raw: value)
     }
     """
   }
   
-  private static func methodQueue(queue: String) -> String {
+  private static func methodQueue(queue: String) -> DeclSyntax {
     """
     @objc func methodQueue() -> DispatchQueue {
-      \(queue)
+      \(raw: queue)
     }
     """
   }
@@ -79,19 +123,13 @@ extension ReactModule: MemberMacro {
     in context: some MacroExpansionContext)
   throws -> [DeclSyntax]
   {
-    // class
-    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-      throw "@\(self) works only on classes."
-    }
-    
-    // NSObject
-    guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-      throw "'\(classDecl.identifier.description.trimmed)' must be inherited from 'NSObject'."
+    guard diagnose(node: node, declaration: declaration, context: context) else {
+      return []
     }
     
     let arguments = node.arguments()
     
-    var items: [String] = [
+    var items: [DeclSyntax] = [
       moduleName(name: arguments?["jsName"]),
       registerModule,
     ]
@@ -104,6 +142,6 @@ extension ReactModule: MemberMacro {
       items.append(methodQueue(queue: queue))
     }
     
-    return items.map { DeclSyntax(stringLiteral: $0) }
+    return items
   }
 }

@@ -23,10 +23,10 @@
 //  THE SOFTWARE.
 //
 
+import Foundation
 import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxMacros
-import Foundation
 
 extension CharacterSet {
   static let whitespacesAndQuotes = CharacterSet(charactersIn: " \"")
