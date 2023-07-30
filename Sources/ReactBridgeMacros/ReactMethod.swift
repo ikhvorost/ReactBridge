@@ -25,71 +25,160 @@
 
 import SwiftSyntax
 import SwiftSyntaxMacros
+import SwiftDiagnostics
+
 
 public struct ReactMethod {
+  
+  enum Error: DiagnosticMessage {
+    case funcOnly
+    case objcOnly(name: String)
+    case unsupportedType(name: String)
+    
+    var severity: DiagnosticSeverity { .error }
+    
+    var message: String {
+      switch self {
+        case .funcOnly:
+          return "@ReactMethod can only be applied to a func"
+        case .objcOnly(let name):
+          return "'\(name)' must be marked with '@objc'"
+        case .unsupportedType(let name):
+          return "'\(name)' type is not supported"
+      }
+    }
+    
+    var diagnosticID: MessageID {
+      MessageID(domain: "ReactModule", id: message)
+    }
+  }
 }
 
 extension ReactMethod: PeerMacro {
-  private static func methodInfo(varName: String, jsName: String, objcName: String, isSync: Bool) -> String {
+  
+  private static func reactExport(funcName: String, jsName: String, objcName: String, isSync: Bool) -> DeclSyntax {
     """
-    private static var \(varName) = RCTMethodInfo(
-      jsName: NSString(string:"\(jsName)").utf8String,
-      objcName: NSString(string:"\(objcName)").utf8String,
-      isSync: \(isSync)
-    )
+    @objc static func __rct_export__\(raw: funcName)() -> UnsafePointer<RCTMethodInfo>? {
+      struct Static {
+        static var methodInfo = RCTMethodInfo(
+          jsName: NSString(string:"\(raw: jsName)").utf8String,
+          objcName: NSString(string:"\(raw: objcName)").utf8String,
+          isSync: \(raw: isSync)
+        )
+      }
+      return withUnsafePointer(to: &Static.methodInfo) { $0 }
+    }
     """
   }
   
-  private static func reactExport(varName: String) -> String {
-    """
-    @objc static func __rct_export__\(varName)() -> UnsafePointer<RCTMethodInfo>? {
-      withUnsafePointer(to: &\(varName)) { $0 }
+  private static func objcType(type: TypeSyntax, isRoot: Bool = false) -> String? {
+    let nonnull = isRoot ? " _Nonnull" : ""
+    
+    if let simpleType = type.as(SimpleTypeIdentifierSyntax.self) {
+      // TODO: Generic Set, Array, Dictionary
+//      SimpleTypeIdentifierSyntax
+//      ├─name: identifier("Array")
+//      ╰─genericArgumentClause: GenericArgumentClauseSyntax
+//        ├─leftAngleBracket: leftAngle
+//        ├─arguments: GenericArgumentListSyntax
+//        │ ╰─[0]: GenericArgumentSyntax
+//        │   ╰─argumentType: SimpleTypeIdentifierSyntax
+//        │     ╰─name: identifier("Int")
+//        ╰─rightAngleBracket: rightAngle
+      
+      guard let (objcType, kind) = ObjcType.find(swiftType: simpleType.description.trimmed) else {
+        return nil
+      }
+      
+      let type = isRoot == false && kind == .numeric
+        ? "NSNumber *"
+        : objcType
+      
+      return "\(type)\(kind == .object ? nonnull : "")"
     }
-    """
+    else if let optionalType = type.as(OptionalTypeSyntax.self), let wrappedType = objcType(type: optionalType.wrappedType) {
+      return "\(wrappedType) _Nullable"
+    }
+    else if let arrayType = type.as(ArrayTypeSyntax.self), let elementType = objcType(type: arrayType.elementType) {
+      return "NSArray<\(elementType)> *\(nonnull)"
+    }
+    else if let dictType = type.as(DictionaryTypeSyntax.self), let keyType = objcType(type: dictType.keyType), let valueType = objcType(type: dictType.valueType) {
+      return "NSDictionary<\(keyType), \(valueType)> *\(nonnull)"
+    }
+    return nil
+  }
+  
+  private static func objcSelector(funcDecl: FunctionDeclSyntax, node: Syntax, context: MacroExpansionContext) -> String? {
+    var selector = funcDecl.identifier.text.trimmed
+    let parameterList = funcDecl.signature.input.parameterList
+    for param in parameterList {
+      
+      guard let objcType = objcType(type: param.type, isRoot: true) else {
+        let swiftType = param.type.description.trimmed
+        let diagnostic = Diagnostic(node: node, message: Error.unsupportedType(name: swiftType))
+        context.diagnose(diagnostic)
+        return nil
+      }
+      
+      var firstName = param.firstName.description.trimmed
+      
+      if param == parameterList.first {
+        if firstName != "_" {
+          if param.secondName == nil {
+            selector += "With\(firstName.capitalized):(\(objcType))\(firstName)"
+            continue
+          }
+          else {
+            firstName = firstName.capitalized
+          }
+        }
+      }
+      else {
+        selector += " "
+      }
+      
+      firstName = firstName == "_" ? "" : firstName
+      let secondName = param.secondName?.description.trimmed ?? firstName
+      selector += "\(firstName):(\(objcType))\(secondName)"
+    }
+    return selector
   }
   
   public static func expansion(
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
     in context: some MacroExpansionContext)
-  throws -> [DeclSyntax] {
+  throws -> [DeclSyntax]
+  {
+    // func
     guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-      throw "@\(self) only works on functions."
+      let diagnostic = Diagnostic(node: node._syntaxNode, message: Error.funcOnly)
+      context.diagnose(diagnostic)
+      return []
     }
     
-    var objcName = funcDecl.identifier.text.trimmed
-    var varName = "_\(objcName)"
-    
-    // Parameter list
-    let parameterList = funcDecl.signature.input.parameterList
-    for item in parameterList {
-      let firstName = item.firstName.description.trimmed
-      
-      let swiftType = item.type.description.trimmed
-      guard let objcType = convertType(swiftType: swiftType) else {
-        throw "Unsupported parameter type: \(swiftType)"
-      }
-      
-      if item == parameterList.first {
-        guard firstName == "_" else {
-          throw "First parameter name must be \"_\"."
-        }
-        objcName += ":(\(objcType))_"
-      }
-      else {
-        objcName += " \(firstName):(\(objcType))\(firstName)"
-      }
-      varName += "_\(firstName)"
+    // @objc
+    guard let attributes = funcDecl.attributes?.as(AttributeListSyntax.self),
+          attributes.first(where: { $0.description.contains("@objc") }) != nil
+    else {
+      let name = funcDecl.identifier.description.trimmed
+      let diagnostic = Diagnostic(node: node._syntaxNode, message: Error.objcOnly(name: name))
+      context.diagnose(diagnostic)
+      return []
     }
+    
+    guard let objcName = objcSelector(funcDecl: funcDecl, node: node._syntaxNode, context: context) else {
+      return []
+    }
+    
+    let funcName = funcDecl.identifier.text.trimmed
     
     let arguments = node.arguments()
-    let jsName = arguments?["jsName"] ?? ""
+    let jsName = arguments?["jsName"] ?? funcName
     let isSync = arguments?["isSync"] == "true"
     
-    let items = [
-      methodInfo(varName: varName, jsName: jsName, objcName: objcName, isSync: isSync),
-      reactExport(varName: varName),
+    return [
+      reactExport(funcName: funcName, jsName: jsName, objcName: objcName, isSync: isSync)
     ]
-    return items.map { DeclSyntax(stringLiteral: $0) }
   }
 }

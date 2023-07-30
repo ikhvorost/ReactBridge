@@ -56,7 +56,7 @@ extension ReactViewProperty: PeerMacro {
       throw "@\(self) only works on variables."
     }
     
-    guard let objcType = convertType(swiftType: swiftType) else {
+    guard let (objcType, kind) = ObjcType.find(swiftType: swiftType) else {
       throw "Unsupported variable type: \(swiftType)."
     }
     

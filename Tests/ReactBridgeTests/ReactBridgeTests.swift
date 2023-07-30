@@ -6,20 +6,48 @@ import XCTest
 import ReactBridge
 
 
-let macros: [String: Macro.Type] = [
-  "ReactModule": ReactModule.self,
-  "ReactMethod": ReactMethod.self,
-  "ReactViewProperty": ReactViewProperty.self
-]
+//let macros: [String: Macro.Type] = [
+//  "ReactModule": ReactModule.self,
+//  "ReactMethod": ReactMethod.self,
+//  "ReactViewProperty": ReactViewProperty.self
+//]
 
 @ReactModule()
 class A: NSObject {
-  @objc
-  func hello() {
+  
+  @ReactMethod()
+  @objc func hello(text: [[String : Int]]) {
+  }
+}
+
+final class ReactMethodTests: XCTestCase {
+  
+  let macros: [String: Macro.Type] = [
+    "ReactMethod": ReactMethod.self,
+  ]
+  
+  func test_error_funcOnly() {
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        @objc func test(name: Array<Int>) {
+        }
+      }
+      """,
+      expandedSource:
+      """
+      """,
+      macros: macros
+    )
   }
 }
 
 final class ReactModuleTests: XCTestCase {
+  
+  let macros: [String: Macro.Type] = [
+    "ReactModule": ReactModule.self,
+  ]
   
   func test_error_classOnly() {
     let diagnostic = DiagnosticSpec(message: ReactModule.Error.classOnly.message, line: 1, column: 1)

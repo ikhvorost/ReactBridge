@@ -33,7 +33,7 @@ public macro ReactModule(
   methodQueue: DispatchQueue? = nil
 ) = #externalMacro(module: "ReactBridgeMacros", type: "ReactModule")
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(__rct_export__))
 public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactMethod")
 
 @attached(peer, names: arbitrary)

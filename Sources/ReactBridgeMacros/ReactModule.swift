@@ -50,19 +50,19 @@ public struct ReactModule {
     }
   }
   
-  static func diagnose(node: AttributeSyntax, declaration: DeclGroupSyntax, context: MacroExpansionContext) -> Bool {
+  private static func diagnose(node: Syntax, declaration: DeclGroupSyntax, context: MacroExpansionContext) -> Bool {
     // class
     guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-      let error = Diagnostic(node: node._syntaxNode, message: Error.classOnly)
-      context.diagnose(error)
+      let diagnostic = Diagnostic(node: node, message: Error.classOnly)
+      context.diagnose(diagnostic)
       return false
     }
     
     // NSObject
     guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
       let name = classDecl.identifier.description.trimmed
-      let error = Diagnostic(node: node._syntaxNode, message: Error.inheritNSObject(name: name))
-      context.diagnose(error)
+      let diagnostic = Diagnostic(node: node, message: Error.inheritNSObject(name: name))
+      context.diagnose(diagnostic)
       return false
     }
     
@@ -77,7 +77,7 @@ extension ReactModule: ConformanceMacro {
     in context: some MacroExpansionContext)
   throws -> [(TypeSyntax, GenericWhereClauseSyntax?)]
   {
-    guard diagnose(node: node, declaration: declaration, context: context) else {
+    guard diagnose(node: node._syntaxNode, declaration: declaration, context: context) else {
       return []
     }
     return [( "RCTBridgeModule", nil )]
@@ -123,7 +123,7 @@ extension ReactModule: MemberMacro {
     in context: some MacroExpansionContext)
   throws -> [DeclSyntax]
   {
-    guard diagnose(node: node, declaration: declaration, context: context) else {
+    guard diagnose(node: node._syntaxNode, declaration: declaration, context: context) else {
       return []
     }
     

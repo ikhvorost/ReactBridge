@@ -28,18 +28,16 @@ import SwiftCompilerPlugin
 import SwiftSyntax
 import SwiftSyntaxMacros
 
-extension CharacterSet {
-  static let whitespacesAndQuotes = CharacterSet(charactersIn: " \"")
-  static let optionalSigns = CharacterSet(charactersIn: "?!")
+extension String {
+  private static let whitespacesAndQuotes = CharacterSet(charactersIn: " \"")
+  
+  var trimmed: String {
+    trimmingCharacters(in: Self.whitespacesAndQuotes)
+  }
 }
 
 extension String: LocalizedError {
-  // Error
   public var errorDescription: String? { self }
-  
-  var trimmed: String {
-    trimmingCharacters(in: .whitespacesAndQuotes)
-  }
 }
 
 extension AttributeSyntax {
@@ -55,57 +53,6 @@ extension AttributeSyntax {
       }
       .reduce([String : String](), { $0.merging($1) { _, new in new } })
   }
-}
-
-struct ObjcType {
-  let objcType: String
-  let swiftTypes: [String]
-  let custom: ((String) -> Bool)?
-  
-  func isEqual(swiftType: String) -> Bool {
-    objcType == swiftType || swiftTypes.contains(swiftType) || custom?(swiftType) == true
-  }
-  
-  init(objcType: String, swiftTypes: [String] = [], custom: ((String) -> Bool)? = nil) {
-    self.objcType = objcType
-    self.swiftTypes = swiftTypes
-    self.custom = custom
-  }
-}
-
-let supportedTypes: [ObjcType] = [
-  ObjcType(objcType: "NSString", swiftTypes: ["String"]),
-  ObjcType(objcType: "BOOL", swiftTypes: ["Bool"]),
-  ObjcType(objcType: "NSInteger", swiftTypes: ["Int", "Int8", "Int16", "Int32", "Int64"]),
-  ObjcType(objcType: "NSUInteger", swiftTypes: ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"]),
-  ObjcType(objcType: "NSNumber"),
-  ObjcType(objcType: "GCFloat", swiftTypes: ["Float"]),
-  ObjcType(objcType: "double", swiftTypes: ["Double"]),
-  ObjcType(objcType: "NSArray", swiftTypes: ["NSMutableArray"], custom: {
-    $0.hasPrefix("Array<") || ($0.hasPrefix("[") && !$0.contains(":") && $0.hasSuffix("]"))
-  }),
-  ObjcType(objcType: "NSDictionary", swiftTypes: ["NSMutableDictionary"], custom: {
-    $0.hasPrefix("Dictionary<") || ($0.hasPrefix("[") && $0.contains(":") && $0.hasSuffix("]"))
-  }),
-  ObjcType(objcType: "NSSet", swiftTypes: ["NSSet"], custom: { $0.hasPrefix("Set<") }),
-  ObjcType(objcType: "RCTResponseSenderBlock"),
-  ObjcType(objcType: "RCTResponseErrorBlock"),
-  ObjcType(objcType: "RCTPromiseResolveBlock"),
-  ObjcType(objcType: "RCTPromiseRejectBlock"),
-  ObjcType(objcType: "NSObject"),
-  ObjcType(objcType: "id", swiftTypes: ["Any", "AnyObject"]),
-  ObjcType(objcType: "NSDate", swiftTypes: ["Date"]),
-  ObjcType(objcType: "NSData", swiftTypes: ["Data"]),
-  ObjcType(objcType: "NSURL", swiftTypes: ["URL"]),
-  ObjcType(objcType: "NSURLRequest", swiftTypes: ["URLRequest"]),
-  ObjcType(objcType: "NSTimeInterval", swiftTypes: ["TimeInterval"]),
-  ObjcType(objcType: "CGPoint"),
-]
-
-func convertType(swiftType: String) -> String? {
-  let type = swiftType.trimmingCharacters(in: .optionalSigns)
-  let first = supportedTypes.first { $0.isEqual(swiftType: type) }
-  return first?.objcType
 }
 
 @main
