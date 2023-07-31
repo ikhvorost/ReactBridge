@@ -71,55 +71,72 @@ extension ReactMethod: PeerMacro {
     """
   }
   
-  private static func objcType(type: TypeSyntax, isRoot: Bool = false) -> String? {
+  private static func objcType(type: TypeSyntax, isRoot: Bool = false) throws -> String {
     let nonnull = isRoot ? " _Nonnull" : ""
     
+    // Simple
     if let simpleType = type.as(SimpleTypeIdentifierSyntax.self) {
-      // TODO: Generic Set, Array, Dictionary
-//      SimpleTypeIdentifierSyntax
-//      ├─name: identifier("Array")
-//      ╰─genericArgumentClause: GenericArgumentClauseSyntax
-//        ├─leftAngleBracket: leftAngle
-//        ├─arguments: GenericArgumentListSyntax
-//        │ ╰─[0]: GenericArgumentSyntax
-//        │   ╰─argumentType: SimpleTypeIdentifierSyntax
-//        │     ╰─name: identifier("Int")
-//        ╰─rightAngleBracket: rightAngle
+      let swiftType = simpleType.name.description.trimmed
       
-      guard let (objcType, kind) = ObjcType.find(swiftType: simpleType.description.trimmed) else {
-        return nil
+      // Generic: Type<type>
+      if let generic = simpleType.genericArgumentClause {
+        switch swiftType {
+          case "Array":
+            if let argumentType = generic.arguments.first?.argumentType {
+              let elementType = try objcType(type: argumentType)
+              return "NSArray<\(elementType)> *\(nonnull)"
+            }
+            break;
+            
+          // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
+          case "Dictionary":
+            return "NSDictionary *\(nonnull)"
+
+          // MARK: React Native doesn't support type parameters for NSSet e.g.: NSSet<NSString *>
+          case "Set":
+            return "NSSet *\(nonnull)"
+            
+          default:
+            throw swiftType
+        }
       }
-      
-      let type = isRoot == false && kind == .numeric
-        ? "NSNumber *"
-        : objcType
-      
-      return "\(type)\(kind == .object ? nonnull : "")"
+      else {
+        guard let (objcType, kind) = ObjcType.find(swiftType: swiftType) else {
+          throw swiftType
+        }
+        
+        let type = isRoot == false && kind == .numeric
+          ? "NSNumber *"
+          : objcType
+        
+        return "\(type)\(kind == .object ? nonnull : "")"
+      }
     }
-    else if let optionalType = type.as(OptionalTypeSyntax.self), let wrappedType = objcType(type: optionalType.wrappedType) {
+    // Optional: ?!
+    else if let optionalType = type.as(OptionalTypeSyntax.self) {
+      let wrappedType = try objcType(type: optionalType.wrappedType)
       return "\(wrappedType) _Nullable"
     }
-    else if let arrayType = type.as(ArrayTypeSyntax.self), let elementType = objcType(type: arrayType.elementType) {
+    // Array: []
+    else if let arrayType = type.as(ArrayTypeSyntax.self) {
+      let elementType = try objcType(type: arrayType.elementType)
       return "NSArray<\(elementType)> *\(nonnull)"
     }
-    else if let dictType = type.as(DictionaryTypeSyntax.self), let keyType = objcType(type: dictType.keyType), let valueType = objcType(type: dictType.valueType) {
-      return "NSDictionary<\(keyType), \(valueType)> *\(nonnull)"
+    // Dictionary: [:]
+    // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
+    else if let _ = type.as(DictionaryTypeSyntax.self) {
+      return "NSDictionary *\(nonnull)"
     }
-    return nil
+    
+    throw type.description.trimmed
   }
   
-  private static func objcSelector(funcDecl: FunctionDeclSyntax, node: Syntax, context: MacroExpansionContext) -> String? {
+  private static func objcSelector(funcDecl: FunctionDeclSyntax) throws -> String {
     var selector = funcDecl.identifier.text.trimmed
+    
     let parameterList = funcDecl.signature.input.parameterList
     for param in parameterList {
-      
-      guard let objcType = objcType(type: param.type, isRoot: true) else {
-        let swiftType = param.type.description.trimmed
-        let diagnostic = Diagnostic(node: node, message: Error.unsupportedType(name: swiftType))
-        context.diagnose(diagnostic)
-        return nil
-      }
-      
+      let objcType = try objcType(type: param.type, isRoot: true)
       var firstName = param.firstName.description.trimmed
       
       if param == parameterList.first {
@@ -141,6 +158,7 @@ extension ReactMethod: PeerMacro {
       let secondName = param.secondName?.description.trimmed ?? firstName
       selector += "\(firstName):(\(objcType))\(secondName)"
     }
+    
     return selector
   }
   
@@ -167,18 +185,24 @@ extension ReactMethod: PeerMacro {
       return []
     }
     
-    guard let objcName = objcSelector(funcDecl: funcDecl, node: node._syntaxNode, context: context) else {
-      return []
+    do {
+      let objcName = try objcSelector(funcDecl: funcDecl)
+      let funcName = funcDecl.identifier.text.trimmed
+      
+      let arguments = node.arguments()
+      let jsName = arguments?["jsName"] ?? funcName
+      let isSync = arguments?["isSync"] == "true"
+      
+      return [
+        reactExport(funcName: funcName, jsName: jsName, objcName: objcName, isSync: isSync)
+      ]
+    }
+    catch {
+      let swiftType = error.localizedDescription
+      let diagnostic = Diagnostic(node: node._syntaxNode, message: Error.unsupportedType(name: swiftType))
+      context.diagnose(diagnostic)
     }
     
-    let funcName = funcDecl.identifier.text.trimmed
-    
-    let arguments = node.arguments()
-    let jsName = arguments?["jsName"] ?? funcName
-    let isSync = arguments?["isSync"] == "true"
-    
-    return [
-      reactExport(funcName: funcName, jsName: jsName, objcName: objcName, isSync: isSync)
-    ]
+    return []
   }
 }

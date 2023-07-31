@@ -42,7 +42,6 @@ struct ObjcType {
 extension ObjcType {
   
   private static let objectTypes: [ObjcType] = [
-    // Objects
     ObjcType(type: "id", swiftTypes: ["Any", "AnyObject"]),
     ObjcType(type: "NSString", swiftTypes: ["String"]),
     ObjcType(type: "NSNumber"),
@@ -54,19 +53,23 @@ extension ObjcType {
     ObjcType(type: "NSArray", swiftTypes: ["NSMutableArray"]),
     ObjcType(type: "NSDictionary", swiftTypes: ["NSMutableDictionary"]),
     ObjcType(type: "NSSet", swiftTypes: ["NSMutableSet"]),
+    ObjcType(type: "UIColor"),
   ]
   
   private static let numericTypes: [ObjcType] = [
     ObjcType(type: "BOOL", swiftTypes: ["Bool"]),
     ObjcType(type: "NSInteger", swiftTypes: ["Int", "Int8", "Int16", "Int32", "Int64"]),
     ObjcType(type: "NSUInteger", swiftTypes: ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"]),
-    ObjcType(type: "GCFloat", swiftTypes: ["Float"]),
+    ObjcType(type: "float", swiftTypes: ["Float"]),
+    ObjcType(type: "CGFloat"),
     ObjcType(type: "double", swiftTypes: ["Double"]),
     ObjcType(type: "NSTimeInterval", swiftTypes: ["TimeInterval"]),
   ]
   
   private static let otherTypes: [ObjcType] = [
     ObjcType(type: "CGPoint"),
+    ObjcType(type: "CGSize"),
+    ObjcType(type: "CGRect"),
     ObjcType(type: "RCTResponseSenderBlock"),
     ObjcType(type: "RCTResponseErrorBlock"),
     ObjcType(type: "RCTPromiseResolveBlock"),

@@ -16,7 +16,7 @@ import ReactBridge
 class A: NSObject {
   
   @ReactMethod()
-  @objc func hello(text: [[String : Int]]) {
+  @objc func hello(_ text: Array<Int>) {
   }
 }
 
@@ -31,7 +31,7 @@ final class ReactMethodTests: XCTestCase {
       """
       class A {
         @ReactMethod
-        @objc func test(name: Array<Int>) {
+        @objc func test(name: Set<Int>) {
         }
       }
       """,
