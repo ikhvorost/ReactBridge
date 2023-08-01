@@ -14,10 +14,11 @@ import ReactBridge
 
 @ReactModule()
 class A: NSObject {
-  
-  @ReactMethod()
-  @objc func hello(_ text: Array<Int>) {
-  }
+
+//  @ReactMethod(isSync: true)
+//  @objc func test(text: CGColor) -> Int {
+//    return 200
+//  }
 }
 
 final class ReactMethodTests: XCTestCase {
@@ -31,7 +32,8 @@ final class ReactMethodTests: XCTestCase {
       """
       class A {
         @ReactMethod
-        @objc func test(name: Set<Int>) {
+        @objc func test(text: String) -> Int {
+          return 200
         }
       }
       """,
@@ -50,7 +52,7 @@ final class ReactModuleTests: XCTestCase {
   ]
   
   func test_error_classOnly() {
-    let diagnostic = DiagnosticSpec(message: ReactModule.Error.classOnly.message, line: 1, column: 1)
+    let diagnostic = DiagnosticSpec(message: ReactModule.Message.classOnly.message, line: 1, column: 1)
         
     assertMacroExpansion(
       """
@@ -69,7 +71,7 @@ final class ReactModuleTests: XCTestCase {
   }
   
   func test_error_inheritNSObject() {
-    let diagnostic = DiagnosticSpec(message: ReactModule.Error.inheritNSObject(name: "A").message, line: 1, column: 1)
+    let diagnostic = DiagnosticSpec(message: ReactModule.Message.inheritNSObject(name: "A").message, line: 1, column: 1)
     
     assertMacroExpansion(
       """

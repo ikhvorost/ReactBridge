@@ -28,9 +28,14 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
+struct SyntaxError: Error {
+  let sytax: Syntax
+  let message: DiagnosticMessage
+}
+
 public struct ReactModule {
   
-  enum Error: DiagnosticMessage {
+  enum Message: DiagnosticMessage {
     case classOnly
     case inheritNSObject(name: String)
     
@@ -49,25 +54,6 @@ public struct ReactModule {
       MessageID(domain: "ReactModule", id: message)
     }
   }
-  
-  private static func diagnose(node: Syntax, declaration: DeclGroupSyntax, context: MacroExpansionContext) -> Bool {
-    // class
-    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-      let diagnostic = Diagnostic(node: node, message: Error.classOnly)
-      context.diagnose(diagnostic)
-      return false
-    }
-    
-    // NSObject
-    guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-      let name = classDecl.identifier.description.trimmed
-      let diagnostic = Diagnostic(node: node, message: Error.inheritNSObject(name: name))
-      context.diagnose(diagnostic)
-      return false
-    }
-    
-    return true
-  }
 }
 
 extension ReactModule: ConformanceMacro {
@@ -77,10 +63,7 @@ extension ReactModule: ConformanceMacro {
     in context: some MacroExpansionContext)
   throws -> [(TypeSyntax, GenericWhereClauseSyntax?)]
   {
-    guard diagnose(node: node._syntaxNode, declaration: declaration, context: context) else {
-      return []
-    }
-    return [( "RCTBridgeModule", nil )]
+    return [("RCTBridgeModule", nil)]
   }
 }
 
@@ -101,7 +84,7 @@ extension ReactModule: MemberMacro {
     }
     """
   
-  private static func requiresMainQueueSetup(value: String) -> DeclSyntax {
+  private static func requiresMainQueueSetup(value: Bool) -> DeclSyntax {
     """
     @objc static func requiresMainQueueSetup() -> Bool {
       \(raw: value)
@@ -123,25 +106,36 @@ extension ReactModule: MemberMacro {
     in context: some MacroExpansionContext)
   throws -> [DeclSyntax]
   {
-    guard diagnose(node: node._syntaxNode, declaration: declaration, context: context) else {
+    do {
+      // Error: class
+      guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+        throw SyntaxError(sytax: declaration._syntaxNode, message: Message.classOnly)
+      }
+      
+      // Error: NSObject
+      guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+        let name = classDecl.identifier.description.trimmed
+        throw SyntaxError(sytax: classDecl._syntaxNode, message: Message.inheritNSObject(name: name))
+      }
+      
+      let arguments = node.arguments()
+      
+      var items: [DeclSyntax] = [
+        moduleName(name: arguments?["jsName"]),
+        registerModule,
+        requiresMainQueueSetup(value: arguments?["requiresMainQueueSetup"] == "true")
+      ]
+      
+      if let queue = arguments?["methodQueue"] {
+        items.append(methodQueue(queue: queue))
+      }
+      
+      return items
+    }
+    catch let error as SyntaxError {
+      let diagnostic = Diagnostic(node: error.sytax, message: error.message)
+      context.diagnose(diagnostic)
       return []
     }
-    
-    let arguments = node.arguments()
-    
-    var items: [DeclSyntax] = [
-      moduleName(name: arguments?["jsName"]),
-      registerModule,
-    ]
-    
-    if let value = arguments?["requiresMainQueueSetup"] {
-      items.append(requiresMainQueueSetup(value: value))
-    }
-    
-    if let queue = arguments?["methodQueue"] {
-      items.append(methodQueue(queue: queue))
-    }
-    
-    return items
   }
 }

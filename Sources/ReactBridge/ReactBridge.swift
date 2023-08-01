@@ -36,5 +36,5 @@ public macro ReactModule(
 @attached(peer, names: prefixed(__rct_export__))
 public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactMethod")
 
-@attached(peer, names: arbitrary)
+@attached(peer, names: prefixed(propConfig_))
 public macro ReactViewProperty() = #externalMacro(module: "ReactBridgeMacros", type: "ReactViewProperty")
