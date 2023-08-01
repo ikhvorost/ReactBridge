@@ -25,74 +25,67 @@
 
 import Foundation
 
-struct ObjcType {
-  let type: String
-  let swiftTypes: [String]
-  
-  fileprivate func isEqual(swiftType: String) -> Bool {
-    return type == swiftType || swiftTypes.contains(swiftType)
-  }
-  
-  fileprivate init(type: String, swiftTypes: [String] = []) {
-    self.type = type
-    self.swiftTypes = swiftTypes
-  }
-}
 
-extension ObjcType {
-  
-  private static let objectTypes: [ObjcType] = [
-    ObjcType(type: "id", swiftTypes: ["Any", "AnyObject"]),
-    ObjcType(type: "NSString", swiftTypes: ["String"]),
-    ObjcType(type: "NSNumber"),
-    ObjcType(type: "NSObject"),
-    ObjcType(type: "NSDate", swiftTypes: ["Date"]),
-    ObjcType(type: "NSData", swiftTypes: ["Data"]),
-    ObjcType(type: "NSURL", swiftTypes: ["URL"]),
-    ObjcType(type: "NSURLRequest", swiftTypes: ["URLRequest"]),
-    ObjcType(type: "NSArray", swiftTypes: ["NSMutableArray"]),
-    ObjcType(type: "NSDictionary", swiftTypes: ["NSMutableDictionary"]),
-    ObjcType(type: "NSSet", swiftTypes: ["NSMutableSet"]),
-    ObjcType(type: "UIColor"),
-  ]
-  
-  private static let numericTypes: [ObjcType] = [
-    ObjcType(type: "BOOL", swiftTypes: ["Bool"]),
-    ObjcType(type: "NSInteger", swiftTypes: ["Int", "Int8", "Int16", "Int32", "Int64"]),
-    ObjcType(type: "NSUInteger", swiftTypes: ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"]),
-    ObjcType(type: "float", swiftTypes: ["Float"]),
-    ObjcType(type: "CGFloat"),
-    ObjcType(type: "double", swiftTypes: ["Double"]),
-    ObjcType(type: "NSTimeInterval", swiftTypes: ["TimeInterval"]),
-  ]
-  
-  private static let otherTypes: [ObjcType] = [
-    ObjcType(type: "CGPoint"),
-    ObjcType(type: "CGSize"),
-    ObjcType(type: "CGRect"),
-    ObjcType(type: "RCTResponseSenderBlock"),
-    ObjcType(type: "RCTResponseErrorBlock"),
-    ObjcType(type: "RCTPromiseResolveBlock"),
-    ObjcType(type: "RCTPromiseRejectBlock"),
-  ]
-  
-  enum ObjcTypeKind {
+fileprivate let objectMap: [String : [String]] = [
+  "id" : ["Any", "AnyObject"],
+  "NSString" : ["String"],
+  "NSNumber" : [],
+  "NSObject" : [],
+  "NSDate" : ["Date"],
+  "NSData" : ["Data"],
+  "NSURL" : ["URL"],
+  "NSURLRequest": ["URLRequest"],
+  "NSArray": ["NSMutableArray"],
+  "NSDictionary": ["NSMutableDictionary"],
+  "NSSet": ["NSMutableSet"],
+  "UIColor": [],
+]
+
+fileprivate let numericMap: [String : [String]] = [
+  "BOOL" : ["Bool"],
+  "NSInteger" : ["Int", "Int8", "Int16", "Int32", "Int64"],
+  "NSUInteger" : ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"],
+  "float" : ["Float"],
+  "CGFloat" : [],
+  "double" : ["Double"],
+  "NSTimeInterval" : ["TimeInterval"],
+]
+
+fileprivate let otherMap: [String : [String]] = [
+  "CGPoint" : [],
+  "CGSize" : [],
+  "CGRect" : [],
+  "RCTResponseSenderBlock" : [],
+  "RCTResponseErrorBlock" : [],
+  "RCTPromiseResolveBlock" : [],
+  "RCTPromiseRejectBlock" : [],
+]
+
+struct ObjcType {
+  enum Kind {
     case object
     case numeric
     case other
   }
   
-  static func find(swiftType: String) -> (type: String, kind: ObjcTypeKind)? {
-    if let objcType = objectTypes.first(where: { $0.isEqual(swiftType: swiftType) }) {
-      let asterisk = objcType.type == "id" ? "" : " *"
-      let type = "\(objcType.type)\(asterisk)"
-      return (type, .object)
-    }
-    else if let objcType = numericTypes.first(where: { $0.isEqual(swiftType: swiftType) }) {
-      return (objcType.type, .numeric)
-    }
-    else if let objcType = otherTypes.first(where: { $0.isEqual(swiftType: swiftType) }) {
-      return (objcType.type, .other)
+  private static let maps: [(Kind, [String : [String]])] = [
+    (.object, objectMap),
+    (.numeric, numericMap),
+    (.other, otherMap)
+  ]
+  
+  let kind: Kind
+  let name: String
+  
+  init?(swiftType: String) {
+    for (kind, map) in Self.maps {
+      for (key, value) in map {
+        if key == swiftType || value.contains(swiftType) {
+          self.kind = kind
+          self.name = key
+          return
+        }
+      }
     }
     return nil
   }

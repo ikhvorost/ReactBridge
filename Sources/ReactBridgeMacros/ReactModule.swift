@@ -115,7 +115,7 @@ extension ReactModule: MemberMacro {
       // Error: NSObject
       guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
         let name = classDecl.identifier.description.trimmed
-        throw SyntaxError(sytax: classDecl._syntaxNode, message: Message.inheritNSObject(name: name))
+        throw SyntaxError(sytax: classDecl.identifier._syntaxNode, message: Message.inheritNSObject(name: name))
       }
       
       let arguments = node.arguments()
@@ -135,6 +135,7 @@ extension ReactModule: MemberMacro {
     catch let error as SyntaxError {
       let diagnostic = Diagnostic(node: error.sytax, message: error.message)
       context.diagnose(diagnostic)
+      
       return []
     }
   }

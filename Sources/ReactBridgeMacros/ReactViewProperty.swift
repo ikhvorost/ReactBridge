@@ -56,10 +56,10 @@ extension ReactViewProperty: PeerMacro {
       throw "@\(self) only works on variables."
     }
     
-    guard let (objcType, _) = ObjcType.find(swiftType: swiftType) else {
+    guard let objcType = ObjcType(swiftType: swiftType) else {
       throw "Unsupported variable type: \(swiftType)."
     }
     
-    return [DeclSyntax(stringLiteral: propConfig(name: name, objcType: objcType))]
+    return [DeclSyntax(stringLiteral: propConfig(name: name, objcType: objcType.name))]
   }
 }
