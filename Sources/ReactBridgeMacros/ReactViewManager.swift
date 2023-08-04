@@ -1,5 +1,5 @@
 //
-//  ReactModule.swift
+//  ReactViewManager.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/07/24.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -28,74 +28,35 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-struct SyntaxError: Error {
-  let sytax: Syntax
-  let message: DiagnosticMessage
-}
-
-public struct ReactModule {
+public struct ReactViewManager {
   
   enum Message: DiagnosticMessage {
     case classOnly
-    case inheritNSObject(name: String)
+    case inheritRCTViewManager(name: String)
     
     var severity: DiagnosticSeverity { .error }
     
     var message: String {
       switch self {
         case .classOnly:
-          return "@ReactModule can only be applied to a class"
-        case .inheritNSObject(let name):
-          return "'\(name)' must inherit 'NSObject'"
+          return "@ReactViewManager can only be applied to a class"
+        case .inheritRCTViewManager(let name):
+          return "'\(name)' must inherit 'RCTViewManager'"
       }
     }
     
     var diagnosticID: MessageID {
-      MessageID(domain: "ReactModule", id: message)
+      MessageID(domain: "ReactViewManager", id: message)
     }
   }
 }
 
-extension ReactModule: ConformanceMacro {
-  public static func expansion(
-    of node: AttributeSyntax,
-    providingConformancesOf declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext)
-  throws -> [(TypeSyntax, GenericWhereClauseSyntax?)]
-  {
-    return [("RCTBridgeModule", nil)]
-  }
-}
-
-extension ReactModule: MemberMacro {
+extension ReactViewManager: MemberMacro {
   
-  static func moduleName(name: String?, override: Bool = false) -> DeclSyntax {
+  private static func propConfig(name: String, objcType: String) -> DeclSyntax {
     """
-    @objc \(override ? "override " : "")class func moduleName() -> String! {
-      "\(raw: name ?? "\\(self)")"
-    }
-    """
-  }
-  
-  static let registerModule: DeclSyntax =
-    """
-    @objc static func _registerModule() {
-      RCTRegisterModule(self);
-    }
-    """
-  
-  static func requiresMainQueueSetup(value: Bool, override: Bool = false) -> DeclSyntax {
-    """
-    @objc \(override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
-      \(raw: value)
-    }
-    """
-  }
-  
-  static func methodQueue(queue: String, override: Bool = false) -> DeclSyntax {
-    """
-    @objc func methodQueue() -> DispatchQueue {
-      \(raw: queue)
+    @objc static func propConfig_\(raw: name)() -> [String] {
+      ["\(raw: objcType)"]
     }
     """
   }
@@ -104,32 +65,37 @@ extension ReactModule: MemberMacro {
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)
-  throws -> [DeclSyntax]
-  {
+  throws -> [DeclSyntax] {
     do {
       // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: Message.classOnly)
+        throw SyntaxError(sytax: declaration._syntaxNode, message: ReactViewManager.Message.classOnly)
       }
       
-      // Error: NSObject
-      guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+      // Error: RCTViewManager
+      guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
         let name = classDecl.identifier.description.trimmed
-        throw SyntaxError(sytax: classDecl.identifier._syntaxNode, message: Message.inheritNSObject(name: name))
+        throw SyntaxError(sytax: classDecl.identifier._syntaxNode, message: Message.inheritRCTViewManager(name: name))
       }
       
       let arguments = node.arguments()
       let jsName = arguments?["jsName"] as? String
-      let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
       
       var items: [DeclSyntax] = [
-        moduleName(name: jsName),
-        registerModule,
-        requiresMainQueueSetup(value: mainQueueSetup)
+        ReactModule.moduleName(name: jsName, override: true),
+        ReactModule.registerModule,
+        ReactModule.requiresMainQueueSetup(value: true, override: true),
+        ReactModule.methodQueue(queue: ".main")
       ]
       
-      if let queue = arguments?["methodQueue"] as? String {
-        items.append(methodQueue(queue: queue))
+      if let properties = arguments?["properties"] as? [String : String] {
+        for (name, type) in properties {
+          let swiftType = type.replacingOccurrences(of: ".self", with: "")
+          guard let objcType = ObjcType(swiftType: swiftType) else {
+            throw "Unsupported variable type: \(swiftType)."
+          }
+          items.append(propConfig(name: name, objcType: objcType.name))
+        }
       }
       
       return items

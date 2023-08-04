@@ -5,11 +5,14 @@ func RCTRegisterModule(_ cls: AnyClass) {
   print(#function, cls)
 }
 
-protocol RCTBridgeModule: NSObjectProtocol {
-  static func moduleName() -> String!
+protocol RCTBridgeModule {
 }
 
-@objcMembers
+class RCTViewManager: NSObject {
+  class func moduleName() -> String! { "" }
+  class func requiresMainQueueSetup() -> Bool { false }
+}
+
 class RCTMethodInfo: NSObject {
   let jsName: UnsafePointer<CChar>?
   let objcName: UnsafePointer<CChar>?

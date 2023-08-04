@@ -9,16 +9,20 @@ import ReactBridge
 //let macros: [String: Macro.Type] = [
 //  "ReactModule": ReactModule.self,
 //  "ReactMethod": ReactMethod.self,
-//  "ReactViewProperty": ReactViewProperty.self
+//  "ReactViewManager": ReactViewManager.self
 //]
 
-@ReactModule()
+@ReactModule
 class A: NSObject {
-
+//
 //  @ReactMethod(isSync: true)
-//  @objc func test(text: CGColor) -> Int {
+//  @objc func test(value: String) -> NSNumber {
 //    return 200
 //  }
+}
+
+@ReactViewManager(jsName: "NativeView", properties: ["text" : String.self])
+class B: RCTViewManager {
 }
 
 final class ReactMethodTests: XCTestCase {
@@ -32,8 +36,7 @@ final class ReactMethodTests: XCTestCase {
       """
       class A {
         @ReactMethod
-        @objc func test(text: String) -> Int {
-          return 200
+        @objc func test(text: Dictionary<String, Int>) {
         }
       }
       """,
@@ -65,7 +68,7 @@ final class ReactModuleTests: XCTestCase {
       struct A {
       }
       """,
-      diagnostics: [diagnostic, diagnostic],
+      diagnostics: [diagnostic],
       macros: macros
     )
   }
@@ -84,7 +87,7 @@ final class ReactModuleTests: XCTestCase {
       class A {
       }
       """,
-      diagnostics: [diagnostic, diagnostic],
+      diagnostics: [diagnostic],
       macros: macros
     )
   }
@@ -92,7 +95,7 @@ final class ReactModuleTests: XCTestCase {
   func test() {
     assertMacroExpansion(
       """
-      @ReactModule
+      @ReactModule(jsName: "A", requiresMainQueueSetup: true)
       class A: NSObject {
       }
       """,
@@ -112,5 +115,27 @@ final class ReactModuleTests: XCTestCase {
       macros: macros
     )
   }
+}
+
+
+final class ReactViewManagerTests: XCTestCase {
+  let macros: [String: Macro.Type] = [
+    "ReactViewManager": ReactViewManager.self,
+  ]
+  
+  func test_error_classOnly() {
+    assertMacroExpansion(
+      """
+      @ReactViewManager(jsName: "NativeView", properties: ["test" : String.self])
+      class A: RCTViewManager {
+      }
+      """,
+      expandedSource:
+      """
+      """,
+      macros: macros
+    )
+  }
+  
 }
 

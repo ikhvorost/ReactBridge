@@ -40,18 +40,37 @@ extension String: LocalizedError {
   public var errorDescription: String? { self }
 }
 
+extension Dictionary {
+  func mergingNew(dict: Dictionary) -> Dictionary {
+    merging(dict) { _, new in new }
+  }
+}
+
 extension AttributeSyntax {
   
-  func arguments() -> [String : String]? {
+  func arguments() -> [String : Any]? {
     argument?.as(TupleExprElementListSyntax.self)?
       .compactMap {
         guard let name = $0.label?.text else {
           return nil
         }
-        let value = $0.expression.description.trimmed
-        return [name : value]
+        
+        if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self) {
+          return [name : stringLiteral.description.trimmed]
+        }
+        else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
+          return [name : booleanLiteral.description.trimmed == "true"]
+        }
+        else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
+          let dict: [String : String] = list
+            .map { [$0.keyExpression.description.trimmed : $0.valueExpression.description.trimmed] }
+            .reduce([:], { $0.mergingNew(dict: $1) })
+          return [name : dict]
+        }
+        
+        return nil
       }
-      .reduce([String : String](), { $0.merging($1) { _, new in new } })
+      .reduce([:], { $0.mergingNew(dict: $1) })
   }
 }
 
@@ -60,6 +79,6 @@ struct ReactBridgePlugin: CompilerPlugin {
   let providingMacros: [Macro.Type] = [
     ReactModule.self,
     ReactMethod.self,
-    ReactViewProperty.self,
+    ReactViewManager.self,
   ]
 }
