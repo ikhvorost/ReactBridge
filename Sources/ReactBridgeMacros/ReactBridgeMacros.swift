@@ -49,7 +49,7 @@ extension Dictionary {
 extension AttributeSyntax {
   
   func arguments() -> [String : Any]? {
-    argument?.as(TupleExprElementListSyntax.self)?
+    arguments?.as(LabeledExprListSyntax.self)?
       .compactMap {
         guard let name = $0.label?.text else {
           return nil
@@ -63,7 +63,7 @@ extension AttributeSyntax {
         }
         else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
           let dict: [String : String] = list
-            .map { [$0.keyExpression.description.trimmed : $0.valueExpression.description.trimmed] }
+            .map { [$0.key.description.trimmed : $0.value.description.trimmed] }
             .reduce([:], { $0.mergingNew(dict: $1) })
           return [name : dict]
         }

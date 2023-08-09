@@ -12,7 +12,8 @@ import ReactBridge
 //  "ReactViewManager": ReactViewManager.self
 //]
 
-@ReactModule
+
+@ReactModule()
 class A: NSObject {
 //
 //  @ReactMethod(isSync: true)

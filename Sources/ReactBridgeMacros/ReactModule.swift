@@ -56,14 +56,16 @@ public struct ReactModule {
   }
 }
 
-extension ReactModule: ConformanceMacro {
+extension ReactModule: ExtensionMacro {
   public static func expansion(
-    of node: AttributeSyntax,
-    providingConformancesOf declaration: some DeclGroupSyntax,
+    of node: AttributeSyntax, 
+    attachedTo declaration: some DeclGroupSyntax,
+    providingExtensionsOf type: some TypeSyntaxProtocol,
+    conformingTo protocols: [TypeSyntax],
     in context: some MacroExpansionContext)
-  throws -> [(TypeSyntax, GenericWhereClauseSyntax?)]
-  {
-    return [("RCTBridgeModule", nil)]
+  throws -> [ExtensionDeclSyntax] {
+    let ext: DeclSyntax = "extension \(type.trimmed): RCTBridgeModule {}"
+    return [ext.cast(ExtensionDeclSyntax.self)]
   }
 }
 
@@ -71,7 +73,7 @@ extension ReactModule: MemberMacro {
   
   static func moduleName(name: String?, override: Bool = false) -> DeclSyntax {
     """
-    @objc \(override ? "override " : "")class func moduleName() -> String! {
+    @objc \(raw: override ? "override " : "")class func moduleName() -> String! {
       "\(raw: name ?? "\\(self)")"
     }
     """
@@ -86,7 +88,7 @@ extension ReactModule: MemberMacro {
   
   static func requiresMainQueueSetup(value: Bool, override: Bool = false) -> DeclSyntax {
     """
-    @objc \(override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
+    @objc \(raw: override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
       \(raw: value)
     }
     """
@@ -114,8 +116,8 @@ extension ReactModule: MemberMacro {
       
       // Error: NSObject
       guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        let name = classDecl.identifier.description.trimmed
-        throw SyntaxError(sytax: classDecl.identifier._syntaxNode, message: Message.inheritNSObject(name: name))
+        let name = classDecl.name.description.trimmed
+        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: Message.inheritNSObject(name: name))
       }
       
       let arguments = node.arguments()

@@ -92,14 +92,14 @@ extension ReactMethod: PeerMacro {
     let nonnull = isRoot ? " _Nonnull" : ""
     
     // Simple
-    if let simpleType = type.as(SimpleTypeIdentifierSyntax.self) {
+    if let simpleType = type.as(IdentifierTypeSyntax.self) {
       let swiftType = simpleType.name.description.trimmed
       
       // Generic: Type<type>
       if let generic = simpleType.genericArgumentClause {
         switch swiftType {
           case "Array":
-            if let argumentType = generic.arguments.first?.argumentType {
+            if let argumentType = generic.arguments.first?.argument {
               let elementType = try objcType(type: argumentType)
               return "NSArray<\(elementType)> *\(nonnull)"
             }
@@ -109,7 +109,7 @@ extension ReactMethod: PeerMacro {
           case "Dictionary":
             // Verify key and value types
             for argument in generic.arguments {
-              let _ = try objcType(type: argument.argumentType)
+              let _ = try objcType(type: argument.argument)
             }
             return "NSDictionary *\(nonnull)"
 
@@ -117,7 +117,7 @@ extension ReactMethod: PeerMacro {
           case "Set":
             // Verify type
             for argument in generic.arguments {
-              let _ = try objcType(type: argument.argumentType)
+              let _ = try objcType(type: argument.argument)
             }
             return "NSSet *\(nonnull)"
             
@@ -145,15 +145,15 @@ extension ReactMethod: PeerMacro {
     }
     // Array: []
     else if let arrayType = type.as(ArrayTypeSyntax.self) {
-      let elementType = try objcType(type: arrayType.elementType)
+      let elementType = try objcType(type: arrayType.element)
       return "NSArray<\(elementType)> *\(nonnull)"
     }
     // Dictionary: [:]
     // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
     else if let dictionaryType = type.as(DictionaryTypeSyntax.self) {
       // Verify key and value types
-      let _ = try objcType(type:dictionaryType.keyType)
-      let _ = try objcType(type:dictionaryType.valueType)
+      let _ = try objcType(type:dictionaryType.key)
+      let _ = try objcType(type:dictionaryType.value)
       
       return "NSDictionary *\(nonnull)"
     }
@@ -162,9 +162,9 @@ extension ReactMethod: PeerMacro {
   }
   
   private static func objcSelector(funcDecl: FunctionDeclSyntax) throws -> String {
-    var selector = funcDecl.identifier.text.trimmed
+    var selector = funcDecl.name.text.trimmed
     
-    let parameterList = funcDecl.signature.input.parameterList
+    let parameterList = funcDecl.signature.parameterClause.parameters
     for param in parameterList {
       let objcType = try objcType(type: param.type, isRoot: true)
       var firstName = param.firstName.description.trimmed
@@ -193,7 +193,7 @@ extension ReactMethod: PeerMacro {
   }
   
   private static func verifyType(type: TypeSyntax) throws {
-    if let simpleType = type.as(SimpleTypeIdentifierSyntax.self), simpleType.genericArgumentClause == nil {
+    if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
       let swiftType = simpleType.description.trimmed
       guard let objcType = ObjcType(swiftType: swiftType) else {
         throw SyntaxError(sytax: simpleType._syntaxNode, message: Message.unsupportedType(name: swiftType))
@@ -224,19 +224,19 @@ extension ReactMethod: PeerMacro {
       guard let attributes = funcDecl.attributes?.as(AttributeListSyntax.self),
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
-        let name = funcDecl.identifier.description.trimmed
+        let name = funcDecl.name.description.trimmed
         throw SyntaxError(sytax: funcDecl._syntaxNode, message: Message.objcOnly(name: name))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
-      let funcName = funcDecl.identifier.text.trimmed
+      let funcName = funcDecl.name.text.trimmed
       
       let arguments = node.arguments()
       let jsName = (arguments?["jsName"] as? String) ?? funcName
       let isSync = (arguments?["isSync"] as? Bool) == true
       
       // Return type
-      if let returnType = funcDecl.signature.output?.returnType {
+      if let returnType = funcDecl.signature.returnClause?.type {
         if isSync == false {
           // Warning: isSync
           let diagnostic = Diagnostic(node: node._syntaxNode, message: Message.nonSync)
