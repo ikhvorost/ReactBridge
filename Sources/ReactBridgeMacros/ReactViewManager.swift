@@ -74,7 +74,7 @@ extension ReactViewManager: MemberMacro {
       
       // Error: RCTViewManager
       guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
-        let name = classDecl.name.description.trimmed
+        let name = "\(classDecl.name.trimmed)"
         throw SyntaxError(sytax: classDecl.name._syntaxNode, message: Message.inheritRCTViewManager(name: name))
       }
       

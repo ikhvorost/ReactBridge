@@ -116,7 +116,7 @@ extension ReactModule: MemberMacro {
       
       // Error: NSObject
       guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        let name = classDecl.name.description.trimmed
+        let name = "\(classDecl.name.trimmed)"
         throw SyntaxError(sytax: classDecl.name._syntaxNode, message: Message.inheritNSObject(name: name))
       }
       

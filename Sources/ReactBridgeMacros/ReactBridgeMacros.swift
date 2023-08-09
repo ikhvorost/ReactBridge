@@ -29,10 +29,10 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 
 extension String {
-  private static let whitespacesAndQuotes = CharacterSet(charactersIn: " \"")
+  private static let quotes = CharacterSet(charactersIn: "\"")
   
-  var trimmed: String {
-    trimmingCharacters(in: Self.whitespacesAndQuotes)
+  var trimmedQuotes: String {
+    trimmingCharacters(in: Self.quotes)
   }
 }
 
@@ -55,19 +55,25 @@ extension AttributeSyntax {
           return nil
         }
         
-        if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self) {
-          return [name : stringLiteral.description.trimmed]
+        if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self)?.trimmed {
+          let value = "\(stringLiteral)".trimmedQuotes
+          return [name : value]
         }
         else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
-          return [name : booleanLiteral.description.trimmed == "true"]
+          let value = booleanLiteral.literal.tokenKind == .keyword(.true)
+          return [name : value]
+          //return [name : "\(booleanLiteral)" == "true"]
         }
         else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
           let dict: [String : String] = list
-            .map { [$0.key.description.trimmed : $0.value.description.trimmed] }
+            .map {
+              let key = "\($0.key.trimmed)".trimmedQuotes
+              let value = "\($0.value.trimmed)"
+              return [key : value]
+            }
             .reduce([:], { $0.mergingNew(dict: $1) })
           return [name : dict]
         }
-        
         return nil
       }
       .reduce([:], { $0.mergingNew(dict: $1) })

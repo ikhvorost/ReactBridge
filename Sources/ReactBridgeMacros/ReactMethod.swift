@@ -93,7 +93,7 @@ extension ReactMethod: PeerMacro {
     
     // Simple
     if let simpleType = type.as(IdentifierTypeSyntax.self) {
-      let swiftType = simpleType.name.description.trimmed
+      let swiftType = "\(simpleType.name.trimmed)"
       
       // Generic: Type<type>
       if let generic = simpleType.genericArgumentClause {
@@ -131,11 +131,10 @@ extension ReactMethod: PeerMacro {
           throw SyntaxError(sytax: simpleType.name._syntaxNode, message: Message.unsupportedType(name: swiftType))
         }
         
-        let type = isRoot == false && objcType.kind == .numeric
-          ? "NSNumber *"
-          : objcType.name
+        let type = (isRoot == false && objcType.kind == .numeric) ? "NSNumber *" : objcType.name
+        let asterisk = (objcType.kind == .object) ? " *\(nonnull)" : ""
         
-        return "\(type)\(objcType.kind == .object ? nonnull : "")"
+        return "\(type)\(asterisk)"
       }
     }
     // Optional: ?!
@@ -158,16 +157,16 @@ extension ReactMethod: PeerMacro {
       return "NSDictionary *\(nonnull)"
     }
     
-    throw SyntaxError(sytax: type._syntaxNode, message: Message.unsupportedType(name: type.description.trimmed))
+    throw SyntaxError(sytax: type._syntaxNode, message: Message.unsupportedType(name: "\(type.trimmed)"))
   }
   
   private static func objcSelector(funcDecl: FunctionDeclSyntax) throws -> String {
-    var selector = funcDecl.name.text.trimmed
+    var selector = "\(funcDecl.name.trimmed)"
     
     let parameterList = funcDecl.signature.parameterClause.parameters
     for param in parameterList {
       let objcType = try objcType(type: param.type, isRoot: true)
-      var firstName = param.firstName.description.trimmed
+      var firstName = "\(param.firstName.trimmed)"
       
       if param == parameterList.first {
         if firstName != "_" {
@@ -185,7 +184,7 @@ extension ReactMethod: PeerMacro {
       }
       
       firstName = firstName == "_" ? "" : firstName
-      let secondName = param.secondName?.description.trimmed ?? firstName
+      let secondName = param.secondName != nil ? "\(param.secondName!.trimmed)" : firstName
       selector += "\(firstName):(\(objcType))\(secondName)"
     }
     
@@ -194,7 +193,7 @@ extension ReactMethod: PeerMacro {
   
   private static func verifyType(type: TypeSyntax) throws {
     if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
-      let swiftType = simpleType.description.trimmed
+      let swiftType = "\(simpleType.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
         throw SyntaxError(sytax: simpleType._syntaxNode, message: Message.unsupportedType(name: swiftType))
       }
@@ -224,12 +223,12 @@ extension ReactMethod: PeerMacro {
       guard let attributes = funcDecl.attributes?.as(AttributeListSyntax.self),
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
-        let name = funcDecl.name.description.trimmed
+        let name = "\(funcDecl.name.trimmed)"
         throw SyntaxError(sytax: funcDecl._syntaxNode, message: Message.objcOnly(name: name))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
-      let funcName = funcDecl.name.text.trimmed
+      let funcName = "\(funcDecl.name.trimmed)"
       
       let arguments = node.arguments()
       let jsName = (arguments?["jsName"] as? String) ?? funcName
