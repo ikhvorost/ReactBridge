@@ -85,6 +85,6 @@ struct ReactBridgePlugin: CompilerPlugin {
   let providingMacros: [Macro.Type] = [
     ReactModule.self,
     ReactMethod.self,
-    ReactViewManager.self,
+    ReactView.self,
   ]
 }

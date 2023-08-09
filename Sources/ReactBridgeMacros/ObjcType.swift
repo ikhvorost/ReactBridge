@@ -59,6 +59,7 @@ fileprivate let otherMap: [String : [String]] = [
   "RCTResponseErrorBlock" : [],
   "RCTPromiseResolveBlock" : [],
   "RCTPromiseRejectBlock" : [],
+  "RCTBubblingEventBlock" : [],
 ]
 
 struct ObjcType {

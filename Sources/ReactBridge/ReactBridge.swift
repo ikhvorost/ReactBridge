@@ -37,4 +37,4 @@ public macro ReactModule(
 public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactMethod")
 
 @attached(member, names: named(moduleName), named(_registerModule), named(requiresMainQueueSetup), named(methodQueue), arbitrary)
-public macro ReactViewManager(jsName: String? = nil, properties: [String : Any.Type]? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactViewManager")
+public macro ReactView(jsName: String? = nil, properties: [String : Any.Type]? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactView")

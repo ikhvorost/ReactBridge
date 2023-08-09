@@ -1,5 +1,5 @@
 //
-//  ReactViewManager.swift
+//  ReactView.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/07/24.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -28,7 +28,7 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactViewManager {
+public struct ReactView {
   
   enum Message: DiagnosticMessage {
     case classOnly
@@ -39,19 +39,19 @@ public struct ReactViewManager {
     var message: String {
       switch self {
         case .classOnly:
-          return "@ReactViewManager can only be applied to a class"
+          return "@ReactView can only be applied to a class"
         case .inheritRCTViewManager(let name):
           return "'\(name)' must inherit 'RCTViewManager'"
       }
     }
     
     var diagnosticID: MessageID {
-      MessageID(domain: "ReactViewManager", id: message)
+      MessageID(domain: "ReactView", id: message)
     }
   }
 }
 
-extension ReactViewManager: MemberMacro {
+extension ReactView: MemberMacro {
   
   private static func propConfig(name: String, objcType: String) -> DeclSyntax {
     """
@@ -69,7 +69,7 @@ extension ReactViewManager: MemberMacro {
     do {
       // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: ReactViewManager.Message.classOnly)
+        throw SyntaxError(sytax: declaration._syntaxNode, message: ReactView.Message.classOnly)
       }
       
       // Error: RCTViewManager
@@ -82,7 +82,7 @@ extension ReactViewManager: MemberMacro {
       let jsName = arguments?["jsName"] as? String
       
       var items: [DeclSyntax] = [
-        ReactModule.moduleName(name: jsName, override: true),
+        ReactModule.moduleName(name: jsName ?? "\(classDecl.name.trimmed)", override: true),
         ReactModule.registerModule,
         ReactModule.requiresMainQueueSetup(value: true, override: true),
         ReactModule.methodQueue(queue: ".main")

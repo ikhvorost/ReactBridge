@@ -71,10 +71,10 @@ extension ReactModule: ExtensionMacro {
 
 extension ReactModule: MemberMacro {
   
-  static func moduleName(name: String?, override: Bool = false) -> DeclSyntax {
+  static func moduleName(name: String, override: Bool = false) -> DeclSyntax {
     """
     @objc \(raw: override ? "override " : "")class func moduleName() -> String! {
-      "\(raw: name ?? "\\(self)")"
+      "\(raw: name)"
     }
     """
   }
@@ -125,7 +125,7 @@ extension ReactModule: MemberMacro {
       let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
       
       var items: [DeclSyntax] = [
-        moduleName(name: jsName),
+        moduleName(name: jsName ?? "\(classDecl.name.trimmed)"),
         registerModule,
         requiresMainQueueSetup(value: mainQueueSetup)
       ]

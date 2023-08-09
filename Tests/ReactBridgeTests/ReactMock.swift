@@ -1,5 +1,6 @@
 import Foundation
 
+typealias RCTBubblingEventBlock = ([String : Any]) -> Void
 
 func RCTRegisterModule(_ cls: AnyClass) {
   print(#function, cls)
