@@ -34,26 +34,6 @@ struct SyntaxError: Error {
 }
 
 public struct ReactModule {
-  
-  enum Message: DiagnosticMessage {
-    case classOnly
-    case inheritNSObject(name: String)
-    
-    var severity: DiagnosticSeverity { .error }
-    
-    var message: String {
-      switch self {
-        case .classOnly:
-          return "@ReactModule can only be applied to a class"
-        case .inheritNSObject(let name):
-          return "'\(name)' must inherit 'NSObject'"
-      }
-    }
-    
-    var diagnosticID: MessageID {
-      MessageID(domain: "ReactModule", id: message)
-    }
-  }
 }
 
 extension ReactModule: ExtensionMacro {
@@ -111,13 +91,13 @@ extension ReactModule: MemberMacro {
     do {
       // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: Message.classOnly)
+        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
       }
       
       // Error: NSObject
       guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        let name = "\(classDecl.name.trimmed)"
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: Message.inheritNSObject(name: name))
+        let className = "\(classDecl.name.trimmed)"
+        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, parentName: "NSObject"))
       }
       
       let arguments = node.arguments()

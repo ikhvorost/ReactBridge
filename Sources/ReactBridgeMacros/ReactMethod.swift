@@ -29,46 +29,6 @@ import SwiftDiagnostics
 
 
 public struct ReactMethod {
-  
-  enum Message: DiagnosticMessage, Equatable {
-    // Error
-    case funcOnly
-    case objcOnly(name: String)
-    case unsupportedType(name: String)
-    
-    // Warning
-    case nonSync
-    case nonClassReturnType
-    
-    var severity: DiagnosticSeverity {
-      switch self {
-        case .funcOnly, .objcOnly, .unsupportedType:
-          return .error
-        case .nonSync, .nonClassReturnType:
-          return .warning
-      }
-    }
-    
-    var message: String {
-      switch self {
-        case .funcOnly:
-          return "@ReactMethod can only be applied to a func"
-        case .objcOnly(let name):
-          return "'\(name)' must be marked with '@objc'"
-        case .unsupportedType(let name):
-          return "'\(name)' type is not supported"
-          
-        case .nonClassReturnType:
-          return "Return type must be a class type"
-        case .nonSync:
-          return "Functions with a defined return type should be synchronous"
-      }
-    }
-    
-    var diagnosticID: MessageID {
-      MessageID(domain: "ReactModule", id: message)
-    }
-  }
 }
 
 extension ReactMethod: PeerMacro {
@@ -92,15 +52,16 @@ extension ReactMethod: PeerMacro {
     let nonnull = isRoot ? " _Nonnull" : ""
     
     // Simple
-    if let simpleType = type.as(IdentifierTypeSyntax.self) {
-      let swiftType = "\(simpleType.name.trimmed)"
+    if let identifier = type.as(IdentifierTypeSyntax.self) {
+      let swiftType = "\(identifier.name.trimmed)"
       
       // Generic: Type<type>
-      if let generic = simpleType.genericArgumentClause {
+      if let generic = identifier.genericArgumentClause {
         switch swiftType {
+          //case "Optional":
           case "Array":
-            if let argumentType = generic.arguments.first?.argument {
-              let elementType = try objcType(type: argumentType)
+            if let argument = generic.arguments.first?.argument {
+              let elementType = try objcType(type: argument)
               return "NSArray<\(elementType)> *\(nonnull)"
             }
             break;
@@ -122,13 +83,13 @@ extension ReactMethod: PeerMacro {
             return "NSSet *\(nonnull)"
             
           default:
-            throw SyntaxError(sytax: simpleType.name._syntaxNode, message: Message.unsupportedType(name: swiftType))
+            throw SyntaxError(sytax: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
       }
       // Non generic
       else {
         guard let objcType = ObjcType(swiftType: swiftType) else {
-          throw SyntaxError(sytax: simpleType.name._syntaxNode, message: Message.unsupportedType(name: swiftType))
+          throw SyntaxError(sytax: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
         
         let type = (isRoot == false && objcType.kind == .numeric) ? "NSNumber *" : objcType.name
@@ -138,26 +99,25 @@ extension ReactMethod: PeerMacro {
       }
     }
     // Optional: ?!
-    else if let optionalType = type.as(OptionalTypeSyntax.self) {
-      let wrappedType = try objcType(type: optionalType.wrappedType)
+    else if let optional = type.as(OptionalTypeSyntax.self) {
+      let wrappedType = try objcType(type: optional.wrappedType)
       return "\(wrappedType) _Nullable"
     }
     // Array: []
-    else if let arrayType = type.as(ArrayTypeSyntax.self) {
-      let elementType = try objcType(type: arrayType.element)
-      return "NSArray<\(elementType)> *\(nonnull)"
+    else if let array = type.as(ArrayTypeSyntax.self) {
+      let objcType = try objcType(type: array.element)
+      return "NSArray<\(objcType)> *\(nonnull)"
     }
     // Dictionary: [:]
     // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
-    else if let dictionaryType = type.as(DictionaryTypeSyntax.self) {
+    else if let dictionary = type.as(DictionaryTypeSyntax.self) {
       // Verify key and value types
-      let _ = try objcType(type:dictionaryType.key)
-      let _ = try objcType(type:dictionaryType.value)
+      let _ = try objcType(type:dictionary.key)
+      let _ = try objcType(type:dictionary.value)
       
       return "NSDictionary *\(nonnull)"
     }
-    
-    throw SyntaxError(sytax: type._syntaxNode, message: Message.unsupportedType(name: "\(type.trimmed)"))
+    throw SyntaxError(sytax: type._syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(type.trimmed)"))
   }
   
   private static func objcSelector(funcDecl: FunctionDeclSyntax) throws -> String {
@@ -195,11 +155,11 @@ extension ReactMethod: PeerMacro {
     if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
       let swiftType = "\(simpleType.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw SyntaxError(sytax: simpleType._syntaxNode, message: Message.unsupportedType(name: swiftType))
+        throw SyntaxError(sytax: simpleType._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
       if objcType.kind != .object {
         // Warning: non class return type
-        throw SyntaxError(sytax: type._syntaxNode, message: Message.nonClassReturnType)
+        throw SyntaxError(sytax: type._syntaxNode, message: ErrorMessage.nonClassReturnType)
       }
     }
     else {
@@ -216,15 +176,15 @@ extension ReactMethod: PeerMacro {
     do {
       // Error: func
       guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: Message.funcOnly)
+        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.funcOnly(macroName: "\(self)"))
       }
       
       // Error: @objc
       guard let attributes = funcDecl.attributes?.as(AttributeListSyntax.self),
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
-        let name = "\(funcDecl.name.trimmed)"
-        throw SyntaxError(sytax: funcDecl._syntaxNode, message: Message.objcOnly(name: name))
+        let funcName = "\(funcDecl.name.trimmed)"
+        throw SyntaxError(sytax: funcDecl._syntaxNode, message: ErrorMessage.objcOnly(funcName: funcName))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
@@ -238,7 +198,7 @@ extension ReactMethod: PeerMacro {
       if let returnType = funcDecl.signature.returnClause?.type {
         if isSync == false {
           // Warning: isSync
-          let diagnostic = Diagnostic(node: node._syntaxNode, message: Message.nonSync)
+          let diagnostic = Diagnostic(node: node._syntaxNode, message: ErrorMessage.nonSync)
           context.diagnose(diagnostic)
         }
         try verifyType(type: returnType)

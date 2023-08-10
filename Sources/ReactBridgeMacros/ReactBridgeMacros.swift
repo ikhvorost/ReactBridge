@@ -36,10 +36,6 @@ extension String {
   }
 }
 
-extension String: LocalizedError {
-  public var errorDescription: String? { self }
-}
-
 extension Dictionary {
   func mergingNew(dict: Dictionary) -> Dictionary {
     merging(dict) { _, new in new }
@@ -62,14 +58,12 @@ extension AttributeSyntax {
         else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
           let value = booleanLiteral.literal.tokenKind == .keyword(.true)
           return [name : value]
-          //return [name : "\(booleanLiteral)" == "true"]
         }
         else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
-          let dict: [String : String] = list
+          let dict: [String : ExprSyntax] = list
             .map {
               let key = "\($0.key.trimmed)".trimmedQuotes
-              let value = "\($0.value.trimmed)"
-              return [key : value]
+              return [key : $0.value]
             }
             .reduce([:], { $0.mergingNew(dict: $1) })
           return [name : dict]

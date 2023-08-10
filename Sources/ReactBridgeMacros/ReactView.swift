@@ -29,26 +29,6 @@ import SwiftDiagnostics
 
 
 public struct ReactView {
-  
-  enum Message: DiagnosticMessage {
-    case classOnly
-    case inheritRCTViewManager(name: String)
-    
-    var severity: DiagnosticSeverity { .error }
-    
-    var message: String {
-      switch self {
-        case .classOnly:
-          return "@ReactView can only be applied to a class"
-        case .inheritRCTViewManager(let name):
-          return "'\(name)' must inherit 'RCTViewManager'"
-      }
-    }
-    
-    var diagnosticID: MessageID {
-      MessageID(domain: "ReactView", id: message)
-    }
-  }
 }
 
 extension ReactView: MemberMacro {
@@ -61,6 +41,66 @@ extension ReactView: MemberMacro {
     """
   }
   
+  private static func objcType(expr: ExprSyntax) throws -> String {
+    // Decl
+    if let decl = expr.as(DeclReferenceExprSyntax.self) {
+      let swiftType = "\(decl.trimmed)"
+      guard let objcType = ObjcType(swiftType: swiftType) else {
+        throw SyntaxError(sytax: decl._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+      }
+      return objcType.name
+    }
+    // Type
+    if let type = expr.as(TypeExprSyntax.self) {
+      let swiftType = "\(type.trimmed)"
+      guard let objcType = ObjcType(swiftType: swiftType) else {
+        throw SyntaxError(sytax: type._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+      }
+      return objcType.name
+    }
+    // Optional
+    else if let optional = expr.as(OptionalChainingExprSyntax.self) {
+      return try objcType(expr: optional.expression)
+    }
+    // Dictionary
+    else if let dictionary = expr.as(DictionaryExprSyntax.self) {
+      // Verify key and value types
+      if let elements = dictionary.content.as(DictionaryElementListSyntax.self), let element = elements.first {
+        _ = try objcType(expr: element.key)
+        _ = try objcType(expr: element.value)
+      }
+      return "NSDictionary"
+    }
+    // Array
+    else if let array = expr.as(ArrayExprSyntax.self) {
+      // Verify element type
+      if let element = array.elements.first?.expression {
+        _ = try objcType(expr: element)
+      }
+      return "NSArray"
+    }
+    // Generic
+    else if let generic = expr.as(GenericSpecializationExprSyntax.self) {
+      let swiftType = "\(generic.expression.trimmed)"
+      
+      switch swiftType {
+//        case "Optional":
+//          if let argument = generic.genericArgumentClause.arguments.first?.argument {
+//            return try objcType(expr: argument)
+//          }
+        case "Array":
+          return "NSArray"
+        case "Dictionary":
+          return "NSDictionary"
+        case "Set":
+          return "NSSet"
+        default:
+          throw SyntaxError(sytax: generic._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+      }
+    }
+    throw SyntaxError(sytax: expr._syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(expr.trimmed)"))
+  }
+  
   public static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
@@ -69,13 +109,13 @@ extension ReactView: MemberMacro {
     do {
       // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: ReactView.Message.classOnly)
+        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
       }
       
       // Error: RCTViewManager
       guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
-        let name = "\(classDecl.name.trimmed)"
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: Message.inheritRCTViewManager(name: name))
+        let className = "\(classDecl.name.trimmed)"
+        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, parentName: "RCTViewManager"))
       }
       
       let arguments = node.arguments()
@@ -88,13 +128,11 @@ extension ReactView: MemberMacro {
         ReactModule.methodQueue(queue: ".main")
       ]
       
-      if let properties = arguments?["properties"] as? [String : String] {
-        for (name, type) in properties {
-          let swiftType = type.replacingOccurrences(of: ".self", with: "")
-          guard let objcType = ObjcType(swiftType: swiftType) else {
-            throw "Unsupported variable type: \(swiftType)."
-          }
-          items.append(propConfig(name: name, objcType: objcType.name))
+      // Properties
+      if let properties = arguments?["properties"] as? [String : ExprSyntax] {
+        for (name, expr) in properties {
+          let objcType = try objcType(expr: expr)
+          items.append(propConfig(name: name, objcType: objcType))
         }
       }
       
