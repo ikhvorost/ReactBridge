@@ -23,56 +23,9 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
 import SwiftCompilerPlugin
-import SwiftSyntax
 import SwiftSyntaxMacros
 
-extension String {
-  private static let quotes = CharacterSet(charactersIn: "\"")
-  
-  var trimmedQuotes: String {
-    trimmingCharacters(in: Self.quotes)
-  }
-}
-
-extension Dictionary {
-  func mergingNew(dict: Dictionary) -> Dictionary {
-    merging(dict) { _, new in new }
-  }
-}
-
-extension AttributeSyntax {
-  
-  func arguments() -> [String : Any]? {
-    arguments?.as(LabeledExprListSyntax.self)?
-      .compactMap {
-        guard let name = $0.label?.text else {
-          return nil
-        }
-        
-        if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self)?.trimmed {
-          let value = "\(stringLiteral)".trimmedQuotes
-          return [name : value]
-        }
-        else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
-          let value = booleanLiteral.literal.tokenKind == .keyword(.true)
-          return [name : value]
-        }
-        else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
-          let dict: [String : ExprSyntax] = list
-            .map {
-              let key = "\($0.key.trimmed)".trimmedQuotes
-              return [key : $0.value]
-            }
-            .reduce([:], { $0.mergingNew(dict: $1) })
-          return [name : dict]
-        }
-        return nil
-      }
-      .reduce([:], { $0.mergingNew(dict: $1) })
-  }
-}
 
 @main
 struct ReactBridgePlugin: CompilerPlugin {

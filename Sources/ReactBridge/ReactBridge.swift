@@ -25,6 +25,7 @@
 
 import Foundation
 
+
 //@attached(extension, conformances: RCTBridgeModule)
 @attached(member, names: named(moduleName), named(_registerModule), named(requiresMainQueueSetup), named(methodQueue))
 public macro ReactModule(
