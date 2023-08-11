@@ -26,6 +26,7 @@
 import Foundation
 import SwiftSyntax
 
+
 fileprivate extension String {
   private static let quotes = CharacterSet(charactersIn: "\"")
   
@@ -49,14 +50,17 @@ extension AttributeSyntax {
           return nil
         }
         
+        // String
         if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self)?.trimmed {
           let value = "\(stringLiteral)".trimmedQuotes
           return [name : value]
         }
+        // Bool
         else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
           let value = booleanLiteral.literal.tokenKind == .keyword(.true)
           return [name : value]
         }
+        // Dictionary
         else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
           let dict: [String : ExprSyntax] = list
             .map {
