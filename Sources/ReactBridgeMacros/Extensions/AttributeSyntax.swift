@@ -70,7 +70,10 @@ extension AttributeSyntax {
             .reduce([:], { $0.mergingNew(dict: $1) })
           return [name : dict]
         }
-        return nil
+        else {
+          let value = "\($0.expression.trimmed)"
+          return [name : value]
+        }
       }
       .reduce([:], { $0.mergingNew(dict: $1) })
   }

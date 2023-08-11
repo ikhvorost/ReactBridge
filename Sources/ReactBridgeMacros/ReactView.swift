@@ -65,7 +65,7 @@ extension ReactView: MemberMacro {
         ReactModule.moduleName(name: jsName ?? "\(classDecl.name.trimmed)", override: true),
         ReactModule.registerModule,
         ReactModule.requiresMainQueueSetup(value: true, override: true),
-        ReactModule.methodQueue(queue: ".main")
+        ReactModule.methodQueue(queue: ".main", override: true)
       ]
       
       // Properties
