@@ -61,7 +61,7 @@ enum ErrorMessage: DiagnosticMessage, Equatable {
         return "'\(typeName)' type is not supported"
         
       case .nonClassReturnType:
-        return "Return type must be a class type"
+        return "Return type must be a class type or 'Any'"
       case .nonSync:
         return "Functions with a defined return type should be synchronous"
     }

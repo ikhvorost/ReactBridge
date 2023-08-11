@@ -41,66 +41,6 @@ extension ReactView: MemberMacro {
     """
   }
   
-  private static func objcType(expr: ExprSyntax) throws -> String {
-    // Decl
-    if let decl = expr.as(DeclReferenceExprSyntax.self) {
-      let swiftType = "\(decl.trimmed)"
-      guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw SyntaxError(sytax: decl._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
-      }
-      return objcType.name
-    }
-    // Type
-    if let type = expr.as(TypeExprSyntax.self) {
-      let swiftType = "\(type.trimmed)"
-      guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw SyntaxError(sytax: type._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
-      }
-      return objcType.name
-    }
-    // Optional
-    else if let optional = expr.as(OptionalChainingExprSyntax.self) {
-      return try objcType(expr: optional.expression)
-    }
-    // Dictionary
-    else if let dictionary = expr.as(DictionaryExprSyntax.self) {
-      // Verify key and value types
-      if let elements = dictionary.content.as(DictionaryElementListSyntax.self), let element = elements.first {
-        _ = try objcType(expr: element.key)
-        _ = try objcType(expr: element.value)
-      }
-      return "NSDictionary"
-    }
-    // Array
-    else if let array = expr.as(ArrayExprSyntax.self) {
-      // Verify element type
-      if let element = array.elements.first?.expression {
-        _ = try objcType(expr: element)
-      }
-      return "NSArray"
-    }
-    // Generic
-    else if let generic = expr.as(GenericSpecializationExprSyntax.self) {
-      let swiftType = "\(generic.expression.trimmed)"
-      
-      switch swiftType {
-//        case "Optional":
-//          if let argument = generic.genericArgumentClause.arguments.first?.argument {
-//            return try objcType(expr: argument)
-//          }
-        case "Array":
-          return "NSArray"
-        case "Dictionary":
-          return "NSDictionary"
-        case "Set":
-          return "NSSet"
-        default:
-          throw SyntaxError(sytax: generic._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
-      }
-    }
-    throw SyntaxError(sytax: expr._syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(expr.trimmed)"))
-  }
-  
   public static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
@@ -131,7 +71,7 @@ extension ReactView: MemberMacro {
       // Properties
       if let properties = arguments?["properties"] as? [String : ExprSyntax] {
         for (name, expr) in properties {
-          let objcType = try objcType(expr: expr)
+          let objcType = try expr.objcType()
           items.append(propConfig(name: name, objcType: objcType))
         }
       }
