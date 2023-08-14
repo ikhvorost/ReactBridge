@@ -74,9 +74,9 @@ extension ReactModule: MemberMacro {
     """
   }
   
-  static func methodQueue(queue: String, override: Bool = false) -> DeclSyntax {
+  private static func methodQueue(queue: String) -> DeclSyntax {
     """
-    @objc \(raw: override ? "override " : "")var methodQueue: DispatchQueue {
+    @objc var methodQueue: DispatchQueue {
       \(raw: queue)
     }
     """
