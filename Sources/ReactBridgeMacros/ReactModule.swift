@@ -28,14 +28,10 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-struct SyntaxError: Error {
-  let sytax: Syntax
-  let message: DiagnosticMessage
-}
-
 public struct ReactModule {
 }
 
+/*
 extension ReactModule: ExtensionMacro {
   public static func expansion(
     of node: AttributeSyntax, 
@@ -47,7 +43,7 @@ extension ReactModule: ExtensionMacro {
     let ext: DeclSyntax = "extension \(type.trimmed): RCTBridgeModule {}"
     return [ext.cast(ExtensionDeclSyntax.self)]
   }
-}
+} */
 
 extension ReactModule: MemberMacro {
   
@@ -94,10 +90,16 @@ extension ReactModule: MemberMacro {
         throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
       }
       
+      let className = "\(classDecl.name.trimmed)"
+      
       // Error: NSObject
       guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        let className = "\(classDecl.name.trimmed)"
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, parentName: "NSObject"))
+        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
+      }
+      
+      // Error: RCTBridgeModule
+      guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
+        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
       }
       
       let arguments = node.arguments()
@@ -105,7 +107,7 @@ extension ReactModule: MemberMacro {
       let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
       
       var items: [DeclSyntax] = [
-        moduleName(name: jsName ?? "\(classDecl.name.trimmed)"),
+        moduleName(name: jsName ?? className),
         registerModule,
         requiresMainQueueSetup(value: mainQueueSetup)
       ]
@@ -119,8 +121,7 @@ extension ReactModule: MemberMacro {
     catch let error as SyntaxError {
       let diagnostic = Diagnostic(node: error.sytax, message: error.message)
       context.diagnose(diagnostic)
-      
-      return []
     }
+    return []
   }
 }

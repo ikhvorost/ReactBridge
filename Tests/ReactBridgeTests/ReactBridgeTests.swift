@@ -6,25 +6,25 @@ import XCTest
 import ReactBridge
 
 
-//let macros: [String: Macro.Type] = [
-//  "ReactModule": ReactModule.self,
-//  "ReactMethod": ReactMethod.self,
-//  "ReactViewManager": ReactViewManager.self
-//]
-
-
 @ReactModule()
-class A: NSObject {
-//
-//  @ReactMethod(isSync: true)
-//  @objc func test(value: String) -> NSNumber {
-//    return 200
-//  }
+class A: NSObject, RCTBridgeModule {
+
+  @ReactMethod(isSync: true)
+  @objc func test(value: Int) -> Any {
+    return 200
+  }
 }
 
-@ReactViewManager(jsName: "NativeView", properties: ["text" : String.self])
-class B: RCTViewManager {
+@ReactView(
+  properties: [
+    "text": String,
+    //"onData": RCTBubblingEventBlock,
+    "config": Optional<Array<Int>>
+  ]
+)
+class NativeView: RCTViewManager {
 }
+
 
 final class ReactMethodTests: XCTestCase {
   
@@ -36,8 +36,8 @@ final class ReactMethodTests: XCTestCase {
     assertMacroExpansion(
       """
       class A {
-        @ReactMethod
-        @objc func test(text: Dictionary<String, Int>) {
+        @ReactMethod(isSync: true)
+        @objc func test(text: String) -> CGColor? {
         }
       }
       """,
@@ -51,66 +51,115 @@ final class ReactMethodTests: XCTestCase {
 
 final class ReactModuleTests: XCTestCase {
   
-  let macros: [String: Macro.Type] = [
-    "ReactModule": ReactModule.self,
+  private let macros: [String: Macro.Type] = [
+    "ReactModule": ReactModule.self
   ]
   
-  func test_error_classOnly() {
-    let diagnostic = DiagnosticSpec(message: ReactModule.Message.classOnly.message, line: 1, column: 1)
+  func test_struct() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.classOnly(macroName: "ReactModule").message, line: 1, column: 1)
         
     assertMacroExpansion(
       """
       @ReactModule
-      struct A {
-      }
+      struct A {}
       """,
       expandedSource:
       """
-      struct A {
-      }
+      struct A {}
       """,
       diagnostics: [diagnostic],
       macros: macros
     )
   }
   
-  func test_error_inheritNSObject() {
-    let diagnostic = DiagnosticSpec(message: ReactModule.Message.inheritNSObject(name: "A").message, line: 1, column: 1)
+  func test_NSObject() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "A", superclassName: "NSObject").message, line: 2, column: 7)
     
     assertMacroExpansion(
       """
       @ReactModule
-      class A {
-      }
+      class A {}
       """,
       expandedSource:
       """
-      class A {
-      }
+      class A {}
       """,
       diagnostics: [diagnostic],
       macros: macros
     )
   }
   
-  func test() {
+  func test_RCTBridgeModule() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustConform(className: "A", protocolName: "RCTBridgeModule").message, line: 2, column: 7)
+    
     assertMacroExpansion(
       """
-      @ReactModule(jsName: "A", requiresMainQueueSetup: true)
-      class A: NSObject {
+      @ReactModule
+      class A: NSObject {}
+      """,
+      expandedSource:
+      """
+      class A: NSObject {}
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_default() {
+    assertMacroExpansion(
+      """
+      @ReactModule
+      class A: NSObject, RCTBridgeModule {
       }
       """,
       expandedSource:
       """
-      class A: NSObject {
-          @objc static func moduleName() -> String! {
-            "\\(self)"
+      class A: NSObject, RCTBridgeModule {
+      
+          @objc class func moduleName() -> String! {
+            "A"
           }
+      
           @objc static func _registerModule() {
             RCTRegisterModule(self);
           }
+      
+          @objc class func requiresMainQueueSetup() -> Bool {
+            false
+          }
       }
-      extension A: RCTBridgeModule {
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_params() {
+    assertMacroExpansion(
+      """
+      @ReactModule(jsName: "ModuleA", requiresMainQueueSetup: true, methodQueue: .main)
+      class A: NSObject, RCTBridgeModule {
+      }
+      """,
+      expandedSource:
+      """
+      class A: NSObject, RCTBridgeModule {
+      
+          @objc class func moduleName() -> String! {
+            "ModuleA"
+          }
+      
+          @objc static func _registerModule() {
+            RCTRegisterModule(self);
+          }
+      
+          @objc class func requiresMainQueueSetup() -> Bool {
+            true
+          }
+      
+          @objc var methodQueue: DispatchQueue {
+            .main
+          }
       }
       """,
       macros: macros
@@ -119,15 +168,15 @@ final class ReactModuleTests: XCTestCase {
 }
 
 
-final class ReactViewManagerTests: XCTestCase {
+final class ReactViewTests: XCTestCase {
   let macros: [String: Macro.Type] = [
-    "ReactViewManager": ReactViewManager.self,
+    "ReactView": ReactView.self,
   ]
   
   func test_error_classOnly() {
     assertMacroExpansion(
       """
-      @ReactViewManager(jsName: "NativeView", properties: ["test" : String.self])
+      @ReactView(jsName: "NativeView", properties: ["config": [[String]]])
       class A: RCTViewManager {
       }
       """,

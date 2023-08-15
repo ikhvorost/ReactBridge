@@ -24,14 +24,21 @@
 //
 
 import SwiftDiagnostics
+import SwiftSyntax
 
 
-enum ErrorMessage: DiagnosticMessage, Equatable {
+struct SyntaxError: Error {
+  let sytax: Syntax
+  let message: DiagnosticMessage
+}
+
+enum ErrorMessage: DiagnosticMessage {
   // Error
   case funcOnly(macroName: String)
   case classOnly(macroName: String)
   case objcOnly(funcName: String)
-  case mustInherit(className: String, parentName: String)
+  case mustInherit(className: String, superclassName: String)
+  case mustConform(className: String, protocolName: String)
   case unsupportedType(typeName: String)
   
   // Warning
@@ -40,7 +47,7 @@ enum ErrorMessage: DiagnosticMessage, Equatable {
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .objcOnly, .unsupportedType, .mustInherit:
+      case .funcOnly, .classOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform:
         return .error
       case .nonSync, .nonClassReturnType:
         return .warning
@@ -55,8 +62,10 @@ enum ErrorMessage: DiagnosticMessage, Equatable {
         return "@\(macroName) can only be applied to a class"
       case .objcOnly(let funcName):
         return "'\(funcName)' must be marked with '@objc'"
-      case .mustInherit(let className, let parentName):
-        return "'\(className)' must inherit '\(parentName)'"
+      case .mustInherit(let className, let superclassName):
+        return "'\(className)' must inherit '\(superclassName)'"
+      case .mustConform(let className, let protocolName):
+        return "'\(className)' must conform '\(protocolName)'"
       case .unsupportedType(let typeName):
         return "'\(typeName)' type is not supported"
         
