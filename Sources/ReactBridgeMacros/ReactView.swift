@@ -29,6 +29,19 @@ import SwiftDiagnostics
 
 
 public struct ReactView {
+  
+  private static func diagnostic(declaration: DeclGroupSyntax) throws {
+    // Error: class
+    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+      throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
+    }
+    
+    // Error: RCTViewManager
+    guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
+      let className = "\(classDecl.name.trimmed)"
+      throw Diagnostic(node: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
+    }
+  }
 }
 
 extension ReactView: MemberMacro {
@@ -45,26 +58,24 @@ extension ReactView: MemberMacro {
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)
-  throws -> [DeclSyntax] {
+  throws -> [DeclSyntax] 
+  {
     do {
-      // Error: class
+      try diagnostic(declaration: declaration)
+      
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
+        return []
       }
       
-      // Error: RCTViewManager
-      guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
-        let className = "\(classDecl.name.trimmed)"
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
-      }
+      let className = "\(classDecl.name.trimmed)"
       
       let arguments = node.arguments()
       let jsName = arguments?["jsName"] as? String
       
       var items: [DeclSyntax] = [
-        ReactModule.moduleName(name: jsName ?? "\(classDecl.name.trimmed)", override: true),
         ReactModule.registerModule,
-        ReactModule.requiresMainQueueSetup(value: true, override: true),
+        DeclSyntax(stringLiteral:ReactModule.moduleName(name: jsName ?? "\(className)", override: true)),
+        DeclSyntax(stringLiteral: ReactModule.requiresMainQueueSetup(value: true, override: true)),
       ]
       
       // Properties
@@ -77,11 +88,9 @@ extension ReactView: MemberMacro {
       
       return items
     }
-    catch let error as SyntaxError {
-      let diagnostic = Diagnostic(node: error.sytax, message: error.message)
+    catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)
-      
-      return []
     }
+    return []
   }
 }

@@ -27,10 +27,7 @@ import SwiftDiagnostics
 import SwiftSyntax
 
 
-struct SyntaxError: Error {
-  let sytax: Syntax
-  let message: DiagnosticMessage
-}
+extension Diagnostic: Error {}
 
 enum ErrorMessage: DiagnosticMessage {
   // Error

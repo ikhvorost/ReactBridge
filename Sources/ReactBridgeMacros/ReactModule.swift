@@ -115,6 +115,7 @@ extension ReactModule: ExtensionMacro {
       \(raw: items.joined(separator: "\n\n"))
     }
     """
+    
     return [ext.cast(ExtensionDeclSyntax.self)]
   }
 }

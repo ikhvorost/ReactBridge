@@ -83,11 +83,11 @@ extension ReactMethod: PeerMacro {
     if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
       let swiftType = "\(simpleType.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw SyntaxError(sytax: simpleType._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+        throw Diagnostic(node: simpleType._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
       if objcType.kind != .object {
         // Warning: non class return type
-        throw SyntaxError(sytax: type._syntaxNode, message: ErrorMessage.nonClassReturnType)
+        throw Diagnostic(node: type._syntaxNode, message: ErrorMessage.nonClassReturnType)
       }
     }
     else {
@@ -104,7 +104,7 @@ extension ReactMethod: PeerMacro {
     do {
       // Error: func
       guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.funcOnly(macroName: "\(self)"))
+        throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.funcOnly(macroName: "\(self)"))
       }
       
       // Error: @objc
@@ -112,7 +112,7 @@ extension ReactMethod: PeerMacro {
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
         let funcName = "\(funcDecl.name.trimmed)"
-        throw SyntaxError(sytax: funcDecl._syntaxNode, message: ErrorMessage.objcOnly(funcName: funcName))
+        throw Diagnostic(node: funcDecl._syntaxNode, message: ErrorMessage.objcOnly(funcName: funcName))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
@@ -136,11 +136,9 @@ extension ReactMethod: PeerMacro {
         reactExport(funcName: funcName, jsName: jsName, objcName: objcName, isSync: isSync)
       ]
     }
-    catch let error as SyntaxError {
-      let diagnostic = Diagnostic(node: error.sytax, message: error.message)
+    catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)
-      
-      return []
     }
+    return []
   }
 }

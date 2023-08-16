@@ -24,6 +24,7 @@
 //
 
 import SwiftSyntax
+import SwiftDiagnostics
 
 
 extension ExprSyntax {
@@ -33,7 +34,7 @@ extension ExprSyntax {
     if let decl = self.as(DeclReferenceExprSyntax.self) {
       let swiftType = "\(decl.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw SyntaxError(sytax: decl._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+        throw Diagnostic(node: decl._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
       return objcType.name
     }
@@ -84,9 +85,9 @@ extension ExprSyntax {
         case "Set":
           return "NSSet"
         default:
-          throw SyntaxError(sytax: generic._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+          throw Diagnostic(node: generic._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
     }
-    throw SyntaxError(sytax: _syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
+    throw Diagnostic(node: _syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
   }
 }

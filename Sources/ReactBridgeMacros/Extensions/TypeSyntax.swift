@@ -24,6 +24,7 @@
 //
 
 import SwiftSyntax
+import SwiftDiagnostics
 
 
 extension TypeSyntax {
@@ -63,13 +64,13 @@ extension TypeSyntax {
             return "NSSet *\(nonnull)"
             
           default:
-            throw SyntaxError(sytax: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+            throw Diagnostic(node: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
       }
       // Non generic
       else {
         guard let objcType = ObjcType(swiftType: swiftType) else {
-          throw SyntaxError(sytax: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+          throw Diagnostic(node: identifier.name._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
         
         let type = (isRoot == false && objcType.kind == .numeric) ? "NSNumber *" : objcType.name
@@ -97,6 +98,6 @@ extension TypeSyntax {
       
       return "NSDictionary *\(nonnull)"
     }
-    throw SyntaxError(sytax: self._syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
+    throw Diagnostic(node: self._syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
   }
 }
