@@ -108,7 +108,7 @@ extension ReactMethod: PeerMacro {
       }
       
       // Error: @objc
-      guard let attributes = funcDecl.attributes?.as(AttributeListSyntax.self),
+      guard let attributes = funcDecl.attributes.as(AttributeListSyntax.self),
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
         let funcName = "\(funcDecl.name.trimmed)"
