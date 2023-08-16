@@ -18,9 +18,9 @@ class A: NSObject, RCTBridgeModule {
 
 @ReactView(
   properties: [
-    "text": String,
-    //"onData": RCTBubblingEventBlock,
-    "config": Optional<Array<Int>>
+    "title": String,
+    "onData": RCTBubblingEventBlock,
+    "config": [String: Any]
   ]
 )
 class NativeView: RCTViewManager {
@@ -179,15 +179,95 @@ final class ReactViewTests: XCTestCase {
     "ReactView": ReactView.self,
   ]
   
-  func test_error_classOnly() {
+  func test_struct() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.classOnly(macroName: "ReactView").message, line: 1, column: 1)
+    
     assertMacroExpansion(
       """
-      @ReactView(jsName: "NativeView", properties: ["config": [[String]]])
-      class A: RCTViewManager {
+      @ReactView
+      struct View {}
+      """,
+      expandedSource:
+      """
+      struct View {}
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_RCTViewManager() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "View", superclassName: "RCTViewManager").message, line: 2, column: 7)
+    
+    assertMacroExpansion(
+      """
+      @ReactView
+      class View {}
+      """,
+      expandedSource:
+      """
+      class View {}
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_default() {
+    assertMacroExpansion(
+      """
+      @ReactView
+      class View: RCTViewManager {
       }
       """,
       expandedSource:
       """
+      class View: RCTViewManager {
+      
+          @objc static func _registerModule() {
+            RCTRegisterModule(self);
+          }
+      
+          @objc override class func moduleName() -> String! {
+              "View"
+          }
+      
+          @objc override class func requiresMainQueueSetup() -> Bool {
+            true
+          }
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_params() {
+    assertMacroExpansion(
+      """
+      @ReactView(jsName: "MyView", properties: ["title": String])
+      class View: RCTViewManager {
+      }
+      """,
+      expandedSource:
+      """
+      class View: RCTViewManager {
+      
+          @objc static func _registerModule() {
+            RCTRegisterModule(self);
+          }
+      
+          @objc override class func moduleName() -> String! {
+              "MyView"
+          }
+      
+          @objc override class func requiresMainQueueSetup() -> Bool {
+            true
+          }
+      
+          @objc static func propConfig_title() -> [String] {
+            ["NSString"]
+          }
+      }
       """,
       macros: macros
     )
