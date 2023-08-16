@@ -3,8 +3,9 @@ import SwiftSyntaxMacrosTestSupport
 import XCTest
 
 @testable import ReactBridgeMacros
-import ReactBridge
 
+//*
+import ReactBridge
 
 @ReactModule()
 class A: NSObject, RCTBridgeModule {
@@ -25,6 +26,7 @@ class A: NSObject, RCTBridgeModule {
 class NativeView: RCTViewManager {
 }
 
+// */
 
 final class ReactMethodTests: XCTestCase {
   
@@ -117,17 +119,19 @@ final class ReactModuleTests: XCTestCase {
       """
       class A: NSObject, RCTBridgeModule {
       
-          @objc class func moduleName() -> String! {
-            "A"
-          }
-      
           @objc static func _registerModule() {
             RCTRegisterModule(self);
           }
+      }
       
-          @objc class func requiresMainQueueSetup() -> Bool {
-            false
-          }
+      extension A { // RCTBridgeModule
+        @objc class func moduleName() -> String! {
+          "A"
+        }
+      
+        @objc class func requiresMainQueueSetup() -> Bool {
+          false
+        }
       }
       """,
       macros: macros
@@ -145,21 +149,23 @@ final class ReactModuleTests: XCTestCase {
       """
       class A: NSObject, RCTBridgeModule {
       
-          @objc class func moduleName() -> String! {
-            "ModuleA"
-          }
-      
           @objc static func _registerModule() {
             RCTRegisterModule(self);
           }
+      }
       
-          @objc class func requiresMainQueueSetup() -> Bool {
-            true
-          }
-      
-          @objc var methodQueue: DispatchQueue {
-            .main
-          }
+      extension A { // RCTBridgeModule
+        @objc class func moduleName() -> String! {
+          "ModuleA"
+        }
+
+        @objc class func requiresMainQueueSetup() -> Bool {
+          true
+        }
+
+        @objc var methodQueue: DispatchQueue {
+          .main
+        }
       }
       """,
       macros: macros

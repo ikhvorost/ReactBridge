@@ -29,31 +29,97 @@ import SwiftDiagnostics
 
 
 public struct ReactModule {
+  
+  private static func diagnostic(declaration: DeclGroupSyntax) -> Diagnostic? {
+    // Error: class
+    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+      return Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
+    }
+    
+    let className = "\(classDecl.name.trimmed)"
+    
+    // Error: NSObject
+    guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+      return Diagnostic(node: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
+    }
+    
+    // Error: RCTBridgeModule
+    guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
+      return Diagnostic(node: classDecl.name._syntaxNode, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
+    }
+    
+    return nil
+  }
 }
 
-/*
 extension ReactModule: ExtensionMacro {
+  
+  static func moduleName(name: String, override: Bool = false) -> String {
+    """
+    @objc \(override ? "override " : "")class func moduleName() -> String! {
+        "\(name)"
+    }
+    """
+  }
+  
+  static func requiresMainQueueSetup(value: Bool, override: Bool = false) -> String {
+    """
+    @objc \(override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
+      \(value)
+    }
+    """
+  }
+  
+  private static func methodQueue(queue: String) -> String {
+    """
+    @objc var methodQueue: DispatchQueue {
+      \(queue)
+    }
+    """
+  }
+  
   public static func expansion(
     of node: AttributeSyntax, 
     attachedTo declaration: some DeclGroupSyntax,
     providingExtensionsOf type: some TypeSyntaxProtocol,
     conformingTo protocols: [TypeSyntax],
     in context: some MacroExpansionContext)
-  throws -> [ExtensionDeclSyntax] {
-    let ext: DeclSyntax = "extension \(type.trimmed): RCTBridgeModule {}"
-    return [ext.cast(ExtensionDeclSyntax.self)]
-  }
-} */
-
-extension ReactModule: MemberMacro {
-  
-  static func moduleName(name: String, override: Bool = false) -> DeclSyntax {
+  throws -> [ExtensionDeclSyntax] 
+  {
+    if let _ = diagnostic(declaration: declaration) {
+      return []
+    }
+    
+    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
+      return []
+    }
+    
+    let className = "\(classDecl.name.trimmed)"
+    
+    let arguments = node.arguments()
+    let jsName = arguments?["jsName"] as? String
+    let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
+    
+    var items: [String] = [
+      moduleName(name: jsName ?? className),
+      requiresMainQueueSetup(value: mainQueueSetup)
+    ]
+    
+    if let queue = arguments?["methodQueue"] as? String {
+      items.append(methodQueue(queue: queue))
+    }
+    
+    let ext: DeclSyntax =
     """
-    @objc \(raw: override ? "override " : "")class func moduleName() -> String! {
-      "\(raw: name)"
+    extension \(type.trimmed) { // RCTBridgeModule
+      \(raw: items.joined(separator: "\n\n"))
     }
     """
+    return [ext.cast(ExtensionDeclSyntax.self)]
   }
+}
+
+extension ReactModule: MemberMacro {
   
   static let registerModule: DeclSyntax =
     """
@@ -62,66 +128,17 @@ extension ReactModule: MemberMacro {
     }
     """
   
-  static func requiresMainQueueSetup(value: Bool, override: Bool = false) -> DeclSyntax {
-    """
-    @objc \(raw: override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
-      \(raw: value)
-    }
-    """
-  }
-  
-  private static func methodQueue(queue: String) -> DeclSyntax {
-    """
-    @objc var methodQueue: DispatchQueue {
-      \(raw: queue)
-    }
-    """
-  }
-  
   public static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)
   throws -> [DeclSyntax]
   {
-    do {
-      // Error: class
-      guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        throw SyntaxError(sytax: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
-      }
-      
-      let className = "\(classDecl.name.trimmed)"
-      
-      // Error: NSObject
-      guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
-      }
-      
-      // Error: RCTBridgeModule
-      guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
-        throw SyntaxError(sytax: classDecl.name._syntaxNode, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
-      }
-      
-      let arguments = node.arguments()
-      let jsName = arguments?["jsName"] as? String
-      let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
-      
-      var items: [DeclSyntax] = [
-        moduleName(name: jsName ?? className),
-        registerModule,
-        requiresMainQueueSetup(value: mainQueueSetup)
-      ]
-      
-      if let queue = arguments?["methodQueue"] as? String {
-        items.append(methodQueue(queue: queue))
-      }
-      
-      return items
-    }
-    catch let error as SyntaxError {
-      let diagnostic = Diagnostic(node: error.sytax, message: error.message)
+    if let diagnostic = diagnostic(declaration: declaration) {
       context.diagnose(diagnostic)
+      return []
     }
-    return []
+    
+    return [registerModule]
   }
 }
