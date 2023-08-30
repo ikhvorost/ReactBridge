@@ -19,6 +19,7 @@ class A: NSObject, RCTBridgeModule {
 @ReactView(
   properties: [
     "title": String,
+    "count" : Int,
     "onData": RCTBubblingEventBlock,
     "config": [String: Any]
   ]
@@ -244,7 +245,7 @@ final class ReactViewTests: XCTestCase {
   func test_params() {
     assertMacroExpansion(
       """
-      @ReactView(jsName: "MyView", properties: ["title": String])
+      @ReactView(jsName: "MyView", properties: ["title": String, "count": Int])
       class View: RCTViewManager {
       }
       """,
@@ -266,6 +267,10 @@ final class ReactViewTests: XCTestCase {
       
           @objc static func propConfig_title() -> [String] {
             ["NSString"]
+          }
+      
+          @objc static func propConfig_count() -> [String] {
+            ["NSInteger"]
           }
       }
       """,

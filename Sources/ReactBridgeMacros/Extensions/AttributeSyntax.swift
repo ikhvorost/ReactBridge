@@ -62,13 +62,12 @@ extension AttributeSyntax {
         }
         // Dictionary
         else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
-          let dict: [String : ExprSyntax] = list
+          let items: [(String, ExprSyntax)] = list
             .map {
               let key = "\($0.key.trimmed)".trimmedQuotes
-              return [key : $0.value]
+              return (key, $0.value)
             }
-            .reduce([:], { $0.mergingNew(dict: $1) })
-          return [name : dict]
+          return [name : items]
         }
         else {
           let value = "\($0.expression.trimmed)"

@@ -79,10 +79,10 @@ extension ReactView: MemberMacro {
       ]
       
       // Properties
-      if let properties = arguments?["properties"] as? [String : ExprSyntax] {
-        for (name, expr) in properties {
-          let objcType = try expr.objcType()
-          items.append(propConfig(name: name, objcType: objcType))
+      if let properties = arguments?["properties"] as? [(name: String, expr: ExprSyntax)] {
+        for item in properties {
+          let objcType = try item.expr.objcType()
+          items.append(propConfig(name: item.name, objcType: objcType))
         }
       }
       
