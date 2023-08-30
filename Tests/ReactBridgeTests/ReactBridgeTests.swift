@@ -127,7 +127,7 @@ final class ReactModuleTests: XCTestCase {
       
       extension A { // RCTBridgeModule
         @objc class func moduleName() -> String! {
-          "A"
+        "A"
         }
       
         @objc class func requiresMainQueueSetup() -> Bool {
@@ -157,7 +157,7 @@ final class ReactModuleTests: XCTestCase {
       
       extension A { // RCTBridgeModule
         @objc class func moduleName() -> String! {
-          "ModuleA"
+        "ModuleA"
         }
 
         @objc class func requiresMainQueueSetup() -> Bool {
@@ -230,7 +230,7 @@ final class ReactViewTests: XCTestCase {
           }
       
           @objc override class func moduleName() -> String! {
-              "View"
+            "View"
           }
       
           @objc override class func requiresMainQueueSetup() -> Bool {
@@ -258,7 +258,7 @@ final class ReactViewTests: XCTestCase {
           }
       
           @objc override class func moduleName() -> String! {
-              "MyView"
+            "MyView"
           }
       
           @objc override class func requiresMainQueueSetup() -> Bool {

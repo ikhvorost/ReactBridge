@@ -57,7 +57,7 @@ extension ReactModule: ExtensionMacro {
   static func moduleName(name: String, override: Bool = false) -> String {
     """
     @objc \(override ? "override " : "")class func moduleName() -> String! {
-        "\(name)"
+      "\(name)"
     }
     """
   }
