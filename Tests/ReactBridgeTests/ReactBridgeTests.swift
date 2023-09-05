@@ -10,10 +10,8 @@ import ReactBridge
 @ReactModule()
 class A: NSObject, RCTBridgeModule {
 
-  @ReactMethod(isSync: true)
-  @objc func test(value: Int) -> Any {
-    return 200
-  }
+  @ReactMethod(jsName: "add", isSync: true)
+  @objc func test(count: Int) {}
 }
 
 @ReactView(
@@ -24,7 +22,7 @@ class A: NSObject, RCTBridgeModule {
     "config": [String: Any]
   ]
 )
-class NativeView: RCTViewManager {
+class ViewManager: RCTViewManager {
 }
 
 // */
@@ -35,21 +33,114 @@ final class ReactMethodTests: XCTestCase {
     "ReactMethod": ReactMethod.self,
   ]
   
-  func test_error_funcOnly() {
+  func test_var() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.funcOnly(macroName: "ReactMethod").message, line: 2, column: 3)
+    
     assertMacroExpansion(
       """
       class A {
-        @ReactMethod(isSync: true)
-        @objc func test(text: String) -> CGColor? {
-        }
+        @ReactMethod
+        var name: String
       }
       """,
       expandedSource:
       """
+      class A {
+        var name: String
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_objc() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.objcOnly(funcName: "test").message, line: 2, column: 3)
+    
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        func test() {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        func test() {}
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_default() {
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        @objc
+        func test(count: Int) {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test(count: Int) {}
+      
+        @objc static func __rct_export__test() -> UnsafePointer<RCTMethodInfo>? {
+          struct Static {
+            static var methodInfo = RCTMethodInfo(
+              jsName: NSString(string: "test").utf8String,
+              objcName: NSString(string: "testWithCount:(NSInteger)count").utf8String,
+              isSync: false
+            )
+          }
+          return withUnsafePointer(to: &Static.methodInfo) {
+              $0
+          }
+        }
+      }
       """,
       macros: macros
     )
   }
+  
+  func test_params() {
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod(jsName: "add", isSync: true)
+        @objc
+        func test(count: Int) {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test(count: Int) {}
+      
+        @objc static func __rct_export__test() -> UnsafePointer<RCTMethodInfo>? {
+          struct Static {
+            static var methodInfo = RCTMethodInfo(
+              jsName: NSString(string: "add").utf8String,
+              objcName: NSString(string: "testWithCount:(NSInteger)count").utf8String,
+              isSync: true
+            )
+          }
+          return withUnsafePointer(to: &Static.methodInfo) {
+              $0
+          }
+        }
+      }
+      """,
+      macros: macros
+    )
+  }
+  
 }
 
 final class ReactModuleTests: XCTestCase {
@@ -278,5 +369,23 @@ final class ReactViewTests: XCTestCase {
     )
   }
   
+  func test_unsupportedType() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 1, column: 34)
+    
+    assertMacroExpansion(
+      """
+      @ReactView(properties: ["color": CGColor])
+      class View: RCTViewManager {
+      }
+      """,
+      expandedSource:
+      """
+      class View: RCTViewManager {
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
 }
 
