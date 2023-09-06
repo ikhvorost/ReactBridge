@@ -83,11 +83,11 @@ extension ReactMethod: PeerMacro {
     if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
       let swiftType = "\(simpleType.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw Diagnostic(node: simpleType._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+        throw Diagnostic(node: simpleType, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
       if objcType.kind != .object {
         // Warning: non class return type
-        throw Diagnostic(node: type._syntaxNode, message: ErrorMessage.nonClassReturnType)
+        throw Diagnostic(node: type, message: ErrorMessage.nonClassReturnType)
       }
     }
     else {
@@ -104,7 +104,7 @@ extension ReactMethod: PeerMacro {
     do {
       // Error: func
       guard let funcDecl = declaration.as(FunctionDeclSyntax.self) else {
-        throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.funcOnly(macroName: "\(self)"))
+        throw Diagnostic(node: declaration, message: ErrorMessage.funcOnly(macroName: "\(self)"))
       }
       
       // Error: @objc
@@ -112,7 +112,7 @@ extension ReactMethod: PeerMacro {
             attributes.first(where: { $0.description.contains("@objc") }) != nil
       else {
         let funcName = "\(funcDecl.name.trimmed)"
-        throw Diagnostic(node: funcDecl._syntaxNode, message: ErrorMessage.objcOnly(funcName: funcName))
+        throw Diagnostic(node: funcDecl, message: ErrorMessage.objcOnly(funcName: funcName))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
@@ -127,14 +127,14 @@ extension ReactMethod: PeerMacro {
       if let returnType = funcDecl.signature.returnClause?.type {
         if isSync == false {
           // Warning: isSync
-          let diagnostic = Diagnostic(node: node._syntaxNode, message: ErrorMessage.nonSync)
+          let diagnostic = Diagnostic(node: node, message: ErrorMessage.nonSync)
           context.diagnose(diagnostic)
         }
         try verifyType(type: returnType)
       }
       else if isSync {
         // TODO: Warning: no return type
-        //let diagnostic = Diagnostic(node: node._syntaxNode, message: ErrorMessage.nonSync)
+        //let diagnostic = Diagnostic(node: node, message: ErrorMessage.nonSync)
         //context.diagnose(diagnostic)
       }
       

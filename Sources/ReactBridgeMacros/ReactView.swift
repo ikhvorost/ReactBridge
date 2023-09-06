@@ -29,19 +29,6 @@ import SwiftDiagnostics
 
 
 public struct ReactView {
-  
-  private static func diagnostic(declaration: DeclGroupSyntax) throws {
-    // Error: class
-    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-      throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
-    }
-    
-    // Error: RCTViewManager
-    guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
-      let className = "\(classDecl.name.trimmed)"
-      throw Diagnostic(node: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
-    }
-  }
 }
 
 extension ReactView: MemberMacro {
@@ -53,13 +40,17 @@ extension ReactView: MemberMacro {
   throws -> [DeclSyntax] 
   {
     do {
-      try diagnostic(declaration: declaration)
-      
+      // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        return []
+        throw Diagnostic(node: declaration, message: ErrorMessage.classOnly(macroName: "\(self)"))
       }
       
       let className = "\(classDecl.name.trimmed)"
+      
+      // Error: RCTViewManager
+      guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
+        throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
+      }
       
       let arguments = node.arguments()
       let jsName = arguments?["jsName"]?.stringValue ?? "\"\(className)\""

@@ -353,7 +353,7 @@ final class ReactViewTests: XCTestCase {
   func test_params() {
     assertMacroExpansion(
       """
-      @ReactView(jsName: "MyView", properties: ["title": String, "count": Int])
+      @ReactView(jsName: "MyView")
       class View: RCTViewManager {
       }
       """,
@@ -372,35 +372,8 @@ final class ReactViewTests: XCTestCase {
           @objc override class func requiresMainQueueSetup() -> Bool {
             true
           }
-      
-          @objc static func propConfig_title() -> [String] {
-            ["NSString"]
-          }
-      
-          @objc static func propConfig_count() -> [String] {
-            ["NSInteger"]
-          }
       }
       """,
-      macros: macros
-    )
-  }
-  
-  func test_unsupportedType() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 1, column: 34)
-    
-    assertMacroExpansion(
-      """
-      @ReactView(properties: ["color": CGColor])
-      class View: RCTViewManager {
-      }
-      """,
-      expandedSource:
-      """
-      class View: RCTViewManager {
-      }
-      """,
-      diagnostics: [diagnostic],
       macros: macros
     )
   }

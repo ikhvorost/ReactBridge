@@ -46,7 +46,7 @@ extension ExprSyntax {
     if let decl = self.as(DeclReferenceExprSyntax.self) {
       let swiftType = "\(decl.trimmed)"
       guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw Diagnostic(node: decl._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+        throw Diagnostic(node: decl, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
       return objcType.name
     }
@@ -97,9 +97,9 @@ extension ExprSyntax {
         case "Set":
           return "NSSet"
         default:
-          throw Diagnostic(node: generic._syntaxNode, message: ErrorMessage.unsupportedType(typeName: swiftType))
+          throw Diagnostic(node: generic, message: ErrorMessage.unsupportedType(typeName: swiftType))
       }
     }
-    throw Diagnostic(node: _syntaxNode, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
+    throw Diagnostic(node: self, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
   }
 }

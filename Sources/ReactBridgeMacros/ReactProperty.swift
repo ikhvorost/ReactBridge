@@ -49,7 +49,7 @@ extension ReactProperty: PeerMacro {
     do {
       // Error: var
       guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
-        throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.varOnly(macroName: "\(self)"))
+        throw Diagnostic(node: declaration, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
       if let first = varDecl.bindings.first, let type = first.typeAnnotation?.type {
