@@ -38,7 +38,7 @@ extension ReactMethod: PeerMacro {
     @objc static func __rct_export__\(raw: funcName)() -> UnsafePointer<RCTMethodInfo>? {
       struct Static {
         static var methodInfo = RCTMethodInfo(
-          jsName: NSString(string:"\(raw: jsName)").utf8String,
+          jsName: NSString(string:\(raw: jsName)).utf8String,
           objcName: NSString(string:"\(raw: objcName)").utf8String,
           isSync: \(raw: isSync)
         )
@@ -120,12 +120,7 @@ extension ReactMethod: PeerMacro {
       
       let arguments = node.arguments()
       
-      let jsName = arguments?["jsName"]?.stringValue ?? funcName
-      // TODO: empty name
-      //guard !jsName.isEmpty else {
-        //throw Diagnostic(node: , message: ErrorMessage.emptyName)
-      //}
-      
+      let jsName = arguments?["jsName"]?.stringValue ?? "\"\(funcName)\""
       let isSync = arguments?["isSync"]?.boolValue == true
       
       // Return type

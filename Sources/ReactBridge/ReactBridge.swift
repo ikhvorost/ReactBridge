@@ -26,8 +26,7 @@
 import Foundation
 
 
-@attached(extension, /*conformances: RCTBridgeModule, */names: named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
-@attached(member, names: named(_registerModule))
+@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
 public macro ReactModule(
   jsName: String? = nil,
   requiresMainQueueSetup: Bool = false,

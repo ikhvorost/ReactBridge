@@ -62,12 +62,12 @@ extension ReactView: MemberMacro {
       let className = "\(classDecl.name.trimmed)"
       
       let arguments = node.arguments()
-      let jsName = arguments?["jsName"]?.stringValue ?? className
+      let jsName = arguments?["jsName"]?.stringValue ?? "\"\(className)\""
       
       return [
         ReactModule.registerModule,
-        DeclSyntax(stringLiteral: ReactModule.moduleName(name: jsName, override: true)),
-        DeclSyntax(stringLiteral: ReactModule.requiresMainQueueSetup(value: true, override: true)),
+        ReactModule.moduleName(name: jsName, override: true),
+        ReactModule.requiresMainQueueSetup(value: true, override: true),
       ]
     }
     catch let diagnostic as Diagnostic {

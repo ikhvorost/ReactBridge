@@ -37,10 +37,10 @@ extension AttributeSyntax {
   func arguments() -> [String : ExprSyntax]? {
     arguments?.as(LabeledExprListSyntax.self)?
       .compactMap {
-        guard let name = $0.label?.text else {
+        guard let label = $0.label?.trimmed else {
           return nil
         }
-        return [name : $0.expression.trimmed]
+        return [label.text : $0.expression.trimmed]
       }
       .reduce([:], { $0.mergingNew(dict: $1) })
   }

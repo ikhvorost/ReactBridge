@@ -7,20 +7,22 @@ import XCTest
 //*
 import ReactBridge
 
-@ReactModule()
+let name = "Name"
+
+@ReactModule(jsName: "ModuleA")
 class A: NSObject, RCTBridgeModule {
 
-  @ReactMethod(jsName: "add", isSync: true)
+  @ReactMethod(jsName: "t", isSync: true)
   @objc func test(count: Int) {}
 }
 
 @ReactView()
 class ViewManager: RCTViewManager {
   
-  @ReactProperty
+  @ReactProperty()
   var name: String?
   
-  @ReactProperty
+  @ReactProperty()
   var count: Int?
 }
 
@@ -210,19 +212,17 @@ final class ReactModuleTests: XCTestCase {
       """
       class A: NSObject, RCTBridgeModule {
       
+          @objc class func moduleName() -> String! {
+            "A"
+          }
+      
+          @objc class func requiresMainQueueSetup() -> Bool {
+            false
+          }
+      
           @objc static func _registerModule() {
             RCTRegisterModule(self);
           }
-      }
-      
-      extension A { // RCTBridgeModule
-        @objc class func moduleName() -> String! {
-        "A"
-        }
-      
-        @objc class func requiresMainQueueSetup() -> Bool {
-          false
-        }
       }
       """,
       macros: macros
@@ -240,23 +240,21 @@ final class ReactModuleTests: XCTestCase {
       """
       class A: NSObject, RCTBridgeModule {
       
+          @objc class func moduleName() -> String! {
+            "ModuleA"
+          }
+      
+          @objc class func requiresMainQueueSetup() -> Bool {
+            true
+          }
+      
           @objc static func _registerModule() {
             RCTRegisterModule(self);
           }
-      }
       
-      extension A { // RCTBridgeModule
-        @objc class func moduleName() -> String! {
-        "ModuleA"
-        }
-
-        @objc class func requiresMainQueueSetup() -> Bool {
-          true
-        }
-
-        @objc var methodQueue: DispatchQueue {
-          .main
-        }
+          @objc var methodQueue: DispatchQueue {
+            .main
+          }
       }
       """,
       macros: macros

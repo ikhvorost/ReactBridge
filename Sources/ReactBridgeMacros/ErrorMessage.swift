@@ -38,7 +38,6 @@ enum ErrorMessage: DiagnosticMessage {
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
   case unsupportedType(typeName: String)
-  case emptyName
   
   // Warning
   case nonSync
@@ -46,7 +45,7 @@ enum ErrorMessage: DiagnosticMessage {
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .emptyName:
+      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform:
         return .error
       case .nonSync, .nonClassReturnType:
         return .warning
@@ -69,8 +68,6 @@ enum ErrorMessage: DiagnosticMessage {
         return "'\(className)' must conform '\(protocolName)'"
       case .unsupportedType(let typeName):
         return "'\(typeName)' type is not supported"
-      case .emptyName:
-        return "Name must be not empty"
         
       case .nonClassReturnType:
         return "Return type must be a class type or 'Any'"

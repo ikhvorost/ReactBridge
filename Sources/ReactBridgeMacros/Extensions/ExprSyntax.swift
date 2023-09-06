@@ -28,25 +28,10 @@ import SwiftSyntax
 import SwiftDiagnostics
 
 
-fileprivate extension String {
-  private static let quotes = CharacterSet(charactersIn: "\"")
-  
-  var trimmedQuotes: String {
-    trimmingCharacters(in: Self.quotes)
-  }
-}
-
-
 extension ExprSyntax {
   
-  var stringValue: String? {
-    if let stringLiteral = self.as(StringLiteralExprSyntax.self) {
-      return "\(stringLiteral)".trimmedQuotes
-    }
-    else if let memberAccess = self.as(MemberAccessExprSyntax.self) {
-      return "\(memberAccess)".trimmedQuotes
-    }
-    return nil
+  var stringValue: String {
+    return "\(self.trimmed)"
   }
   
   var boolValue: Bool? {
