@@ -28,10 +28,10 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactProperty {
+public struct ReactViewProperty {
 }
 
-extension ReactProperty: PeerMacro {
+extension ReactViewProperty: PeerMacro {
   
   private static func propConfig(name: String, objcType: String) -> DeclSyntax {
     """

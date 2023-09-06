@@ -19,11 +19,11 @@ class A: NSObject, RCTBridgeModule {
 @ReactView()
 class ViewManager: RCTViewManager {
   
-  @ReactProperty()
-  var name: String?
+  @ReactViewProperty()
+  var title: String?
   
-  @ReactProperty()
-  var count: Int?
+  @ReactViewProperty()
+  var onData: RCTBubblingEventBlock?
 }
 
 // */
@@ -262,21 +262,70 @@ final class ReactModuleTests: XCTestCase {
   }
 }
 
-final class ReactPropertyTests: XCTestCase {
+final class ReactViewPropertyTests: XCTestCase {
   let macros: [String: Macro.Type] = [
-    "ReactProperty": ReactProperty.self,
+    "ReactViewProperty": ReactViewProperty.self,
   ]
   
-  func test() {
+  func test_func() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.varOnly(macroName: "ReactViewProperty").message, line: 2, column: 3)
+    
     assertMacroExpansion(
       """
-      clsss View {
-        @ReactProperty
-        var name: String
+      class View {
+        @ReactViewProperty
+        func hide() {}
       }
       """,
       expandedSource:
       """
+      class View {
+        func hide() {}
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_badType() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 3, column: 14)
+    
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactViewProperty
+        var color: CGColor?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var color: CGColor?
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_default() {
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactViewProperty
+        var title: String?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var title: String?
+      
+        @objc static func propConfig_title() -> [String] {
+          ["NSString"]
+        }
+      }
       """,
       macros: macros
     )
