@@ -1,7 +1,7 @@
 //
 //  ReactView.swift
 //
-//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/07/24.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/09/06.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -28,47 +28,39 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactView {
-  
-  private static func diagnostic(declaration: DeclGroupSyntax) throws {
-    // Error: class
-    guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-      throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.classOnly(macroName: "\(self)"))
-    }
-    
-    // Error: RCTViewManager
-    guard classDecl.inheritanceClause?.description.contains("RCTViewManager") == true else {
-      let className = "\(classDecl.name.trimmed)"
-      throw Diagnostic(node: classDecl.name._syntaxNode, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
-    }
-  }
+public struct ReactProperty {
 }
 
-extension ReactView: MemberMacro {
+extension ReactProperty: PeerMacro {
+  
+  private static func propConfig(name: String, objcType: String) -> DeclSyntax {
+    """
+    @objc static func propConfig_\(raw: name)() -> [String] {
+      ["\(raw: objcType)"]
+    }
+    """
+  }
   
   public static func expansion(
     of node: AttributeSyntax,
-    providingMembersOf declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext)
-  throws -> [DeclSyntax] 
+    providingPeersOf declaration: some DeclSyntaxProtocol,
+    in context: some MacroExpansionContext) throws -> [DeclSyntax] 
   {
     do {
-      try diagnostic(declaration: declaration)
-      
-      guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
-        return []
+      // Error: var
+      guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
+        throw Diagnostic(node: declaration._syntaxNode, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
-      let className = "\(classDecl.name.trimmed)"
+      if let first = varDecl.bindings.first, let type = first.typeAnnotation?.type {
+        let name = "\(first.pattern.trimmed)"
+        let objcType = try type.objcType()
+          .replacingOccurrences(of: " * _Nullable", with: "")
+          .replacingOccurrences(of: " _Nullable", with: "")
+        return [propConfig(name: name, objcType: objcType)]
+      }
       
-      let arguments = node.arguments()
-      let jsName = arguments?["jsName"]?.stringValue ?? className
-      
-      return [
-        ReactModule.registerModule,
-        DeclSyntax(stringLiteral: ReactModule.moduleName(name: jsName, override: true)),
-        DeclSyntax(stringLiteral: ReactModule.requiresMainQueueSetup(value: true, override: true)),
-      ]
+      return []
     }
     catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)

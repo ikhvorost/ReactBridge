@@ -97,15 +97,15 @@ extension ReactModule: ExtensionMacro {
     let className = "\(classDecl.name.trimmed)"
     
     let arguments = node.arguments()
-    let jsName = arguments?["jsName"] as? String
-    let mainQueueSetup = arguments?["requiresMainQueueSetup"] as? Bool == true
-    
+    let jsName = arguments?["jsName"]?.stringValue ?? className
+    let mainQueueSetup = arguments?["requiresMainQueueSetup"]?.boolValue == true
+      
     var items: [String] = [
-      moduleName(name: jsName ?? className),
+      moduleName(name: jsName),
       requiresMainQueueSetup(value: mainQueueSetup)
     ]
     
-    if let queue = arguments?["methodQueue"] as? String {
+    if let queue = arguments?["methodQueue"]?.stringValue {
       items.append(methodQueue(queue: queue))
     }
     

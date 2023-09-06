@@ -33,5 +33,6 @@ struct ReactBridgePlugin: CompilerPlugin {
     ReactModule.self,
     ReactMethod.self,
     ReactView.self,
+    ReactProperty.self,
   ]
 }

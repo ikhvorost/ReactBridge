@@ -33,10 +33,12 @@ enum ErrorMessage: DiagnosticMessage {
   // Error
   case funcOnly(macroName: String)
   case classOnly(macroName: String)
+  case varOnly(macroName: String)
   case objcOnly(funcName: String)
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
   case unsupportedType(typeName: String)
+  case emptyName
   
   // Warning
   case nonSync
@@ -44,7 +46,7 @@ enum ErrorMessage: DiagnosticMessage {
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform:
+      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .emptyName:
         return .error
       case .nonSync, .nonClassReturnType:
         return .warning
@@ -57,6 +59,8 @@ enum ErrorMessage: DiagnosticMessage {
         return "@\(macroName) can only be applied to a func"
       case .classOnly(let macroName):
         return "@\(macroName) can only be applied to a class"
+      case .varOnly(let macroName):
+        return "@\(macroName) can only be applied to a var"
       case .objcOnly(let funcName):
         return "'\(funcName)' must be marked with '@objc'"
       case .mustInherit(let className, let superclassName):
@@ -65,6 +69,8 @@ enum ErrorMessage: DiagnosticMessage {
         return "'\(className)' must conform '\(protocolName)'"
       case .unsupportedType(let typeName):
         return "'\(typeName)' type is not supported"
+      case .emptyName:
+        return "Name must be not empty"
         
       case .nonClassReturnType:
         return "Return type must be a class type or 'Any'"

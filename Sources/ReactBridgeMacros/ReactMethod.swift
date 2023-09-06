@@ -119,8 +119,14 @@ extension ReactMethod: PeerMacro {
       let funcName = "\(funcDecl.name.trimmed)"
       
       let arguments = node.arguments()
-      let jsName = (arguments?["jsName"] as? String) ?? funcName
-      let isSync = (arguments?["isSync"] as? Bool) == true
+      
+      let jsName = arguments?["jsName"]?.stringValue ?? funcName
+      // TODO: empty name
+      //guard !jsName.isEmpty else {
+        //throw Diagnostic(node: , message: ErrorMessage.emptyName)
+      //}
+      
+      let isSync = arguments?["isSync"]?.boolValue == true
       
       // Return type
       if let returnType = funcDecl.signature.returnClause?.type {
@@ -130,6 +136,11 @@ extension ReactMethod: PeerMacro {
           context.diagnose(diagnostic)
         }
         try verifyType(type: returnType)
+      }
+      else if isSync {
+        // TODO: Warning: no return type
+        //let diagnostic = Diagnostic(node: node._syntaxNode, message: ErrorMessage.nonSync)
+        //context.diagnose(diagnostic)
       }
       
       return [

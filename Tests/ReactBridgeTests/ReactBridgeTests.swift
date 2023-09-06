@@ -14,15 +14,14 @@ class A: NSObject, RCTBridgeModule {
   @objc func test(count: Int) {}
 }
 
-@ReactView(
-  properties: [
-    "title": String,
-    "count" : Int,
-    "onData": RCTBubblingEventBlock,
-    "config": [String: Any]
-  ]
-)
+@ReactView()
 class ViewManager: RCTViewManager {
+  
+  @ReactProperty
+  var name: String?
+  
+  @ReactProperty
+  var count: Int?
 }
 
 // */
@@ -265,6 +264,26 @@ final class ReactModuleTests: XCTestCase {
   }
 }
 
+final class ReactPropertyTests: XCTestCase {
+  let macros: [String: Macro.Type] = [
+    "ReactProperty": ReactProperty.self,
+  ]
+  
+  func test() {
+    assertMacroExpansion(
+      """
+      clsss View {
+        @ReactProperty
+        var name: String
+      }
+      """,
+      expandedSource:
+      """
+      """,
+      macros: macros
+    )
+  }
+}
 
 final class ReactViewTests: XCTestCase {
   let macros: [String: Macro.Type] = [

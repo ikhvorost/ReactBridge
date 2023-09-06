@@ -23,17 +23,8 @@
 //  THE SOFTWARE.
 //
 
-import Foundation
 import SwiftSyntax
 
-
-fileprivate extension String {
-  private static let quotes = CharacterSet(charactersIn: "\"")
-  
-  var trimmedQuotes: String {
-    trimmingCharacters(in: Self.quotes)
-  }
-}
 
 fileprivate extension Dictionary {
   func mergingNew(dict: Dictionary) -> Dictionary {
@@ -43,36 +34,13 @@ fileprivate extension Dictionary {
 
 extension AttributeSyntax {
   
-  func arguments() -> [String : Any]? {
+  func arguments() -> [String : ExprSyntax]? {
     arguments?.as(LabeledExprListSyntax.self)?
       .compactMap {
         guard let name = $0.label?.text else {
           return nil
         }
-        
-        // String
-        if let stringLiteral = $0.expression.as(StringLiteralExprSyntax.self)?.trimmed {
-          let value = "\(stringLiteral)".trimmedQuotes
-          return [name : value]
-        }
-        // Bool
-        else if let booleanLiteral = $0.expression.as(BooleanLiteralExprSyntax.self) {
-          let value = booleanLiteral.literal.tokenKind == .keyword(.true)
-          return [name : value]
-        }
-        // Dictionary
-        else if let dictionary = $0.expression.as(DictionaryExprSyntax.self), let list = dictionary.content.as(DictionaryElementListSyntax.self) {
-          let items: [(String, ExprSyntax)] = list
-            .map {
-              let key = "\($0.key.trimmed)".trimmedQuotes
-              return (key, $0.value)
-            }
-          return [name : items]
-        }
-        else {
-          let value = "\($0.expression.trimmed)"
-          return [name : value]
-        }
+        return [name : $0.expression.trimmed]
       }
       .reduce([:], { $0.mergingNew(dict: $1) })
   }
