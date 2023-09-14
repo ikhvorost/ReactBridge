@@ -44,23 +44,23 @@ extension ReactViewProperty: PeerMacro {
   public static func expansion(
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
-    in context: some MacroExpansionContext) throws -> [DeclSyntax] 
-  {
+    in context: some MacroExpansionContext) 
+  throws -> [DeclSyntax] {
     do {
       // Error: var
       guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
         throw Diagnostic(node: declaration, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
-      if let first = varDecl.bindings.first, let type = first.typeAnnotation?.type {
-        let name = "\(first.pattern.trimmed)"
-        let objcType = try type.objcType()
-          .replacingOccurrences(of: " * _Nullable", with: "")
-          .replacingOccurrences(of: " _Nullable", with: "")
-        return [propConfig(name: name, objcType: objcType)]
+      // TODO: var first, second: Type
+      return try varDecl.bindings.compactMap {
+        guard let type = $0.typeAnnotation?.type else {
+          return nil
+        }
+        let name = "\($0.pattern.trimmed)"
+        let objcType = try type.objcType().type()
+        return propConfig(name: name, objcType: objcType)
       }
-      
-      return []
     }
     catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)

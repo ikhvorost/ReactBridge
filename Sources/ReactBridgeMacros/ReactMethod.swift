@@ -53,7 +53,7 @@ extension ReactMethod: PeerMacro {
     
     let parameterList = funcDecl.signature.parameterClause.parameters
     for param in parameterList {
-      let objcType = try param.type.objcType(isRoot: true)
+      let objcType = try param.type.trimmed.objcType().text(root: true)
       var firstName = "\(param.firstName.trimmed)"
       
       if param == parameterList.first {
@@ -68,33 +68,16 @@ extension ReactMethod: PeerMacro {
         }
       }
       else {
-        selector += " "
+        selector += " " // Next param
       }
       
-      firstName = firstName == "_" ? "" : firstName
       let secondName = param.secondName != nil ? "\(param.secondName!.trimmed)" : firstName
-      selector += "\(firstName):(\(objcType))\(secondName)"
+      selector += "\(firstName != "_" ? firstName : ""):(\(objcType))\(secondName)"
     }
     
     return selector
   }
-  
-  private static func verifyType(type: TypeSyntax) throws {
-    if let simpleType = type.as(IdentifierTypeSyntax.self), simpleType.genericArgumentClause == nil {
-      let swiftType = "\(simpleType.trimmed)"
-      guard let objcType = ObjcType(swiftType: swiftType) else {
-        throw Diagnostic(node: simpleType, message: ErrorMessage.unsupportedType(typeName: swiftType))
-      }
-      if objcType.kind != .object {
-        // Warning: non class return type
-        throw Diagnostic(node: type, message: ErrorMessage.nonClassReturnType)
-      }
-    }
-    else {
-      let _ = try type.objcType()
-    }
-  }
-  
+
   public static func expansion(
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
@@ -130,12 +113,13 @@ extension ReactMethod: PeerMacro {
           let diagnostic = Diagnostic(node: node, message: ErrorMessage.nonSync)
           context.diagnose(diagnostic)
         }
-        try verifyType(type: returnType)
-      }
-      else if isSync {
-        // TODO: Warning: no return type
-        //let diagnostic = Diagnostic(node: node, message: ErrorMessage.nonSync)
-        //context.diagnose(diagnostic)
+        
+        // TODO: check return type
+        let swiftType = try returnType.objcType()
+        if case .number = swiftType {
+          // Warning: non class return type
+          //throw Diagnostic(node: returnType, message: ErrorMessage.nonClassReturnType)
+        }
       }
       
       return [

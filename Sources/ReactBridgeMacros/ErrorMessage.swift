@@ -1,5 +1,5 @@
 //
-//  ObjcType.swift
+//  ErrorMessage.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/08/10.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -38,16 +38,16 @@ enum ErrorMessage: DiagnosticMessage {
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
   case unsupportedType(typeName: String)
+  case nonClassReturnType
   
   // Warning
   case nonSync
-  case nonClassReturnType
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform:
+      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .nonClassReturnType:
         return .error
-      case .nonSync, .nonClassReturnType:
+      case .nonSync:
         return .warning
     }
   }
@@ -68,9 +68,9 @@ enum ErrorMessage: DiagnosticMessage {
         return "'\(className)' must conform '\(protocolName)'"
       case .unsupportedType(let typeName):
         return "'\(typeName)' type is not supported"
-        
       case .nonClassReturnType:
         return "Return type must be a class type or 'Any'"
+        
       case .nonSync:
         return "Functions with a defined return type should be synchronous"
     }

@@ -7,13 +7,13 @@ import XCTest
 //*
 import ReactBridge
 
-let name = "Name"
-
-@ReactModule(jsName: "ModuleA")
+@ReactModule()
 class A: NSObject, RCTBridgeModule {
 
-  @ReactMethod(jsName: "t", isSync: true)
-  @objc func test(count: Int) {}
+  @ReactMethod()
+  @objc func test(text: Int) -> Int {
+    0
+  }
 }
 
 @ReactView()
@@ -22,8 +22,8 @@ class ViewManager: RCTViewManager {
   @ReactViewProperty()
   var title: String?
   
-  @ReactViewProperty()
-  var onData: RCTBubblingEventBlock?
+  // @ReactViewProperty()
+  // var onData: RCTBubblingEventBlock?
 }
 
 // */
@@ -33,6 +33,23 @@ final class ReactMethodTests: XCTestCase {
   let macros: [String: Macro.Type] = [
     "ReactMethod": ReactMethod.self,
   ]
+  
+  func rct_export(name: String, selector: String, isSync: Bool = false, jsName: String? = nil) -> String {
+    """
+    @objc static func __rct_export__\(name)() -> UnsafePointer<RCTMethodInfo>? {
+        struct Static {
+          static var methodInfo = RCTMethodInfo(
+            jsName: NSString(string: "\(jsName ?? name)").utf8String,
+            objcName: NSString(string: "\(selector)").utf8String,
+            isSync: \(isSync)
+          )
+        }
+        return withUnsafePointer(to: &Static.methodInfo) {
+            $0
+        }
+      }
+    """
+  }
   
   func test_var() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.funcOnly(macroName: "ReactMethod").message, line: 2, column: 3)
@@ -82,27 +99,88 @@ final class ReactMethodTests: XCTestCase {
       class A {
         @ReactMethod
         @objc
-        func test(count: Int) {}
+        func test1(count: Int) {}
+      
+        @ReactMethod
+        @objc
+        func test2(_ count: Int) {}
+      
+        @ReactMethod
+        @objc
+        func test3(in count: Int) {}
+      
+        @ReactMethod
+        @objc
+        func test4(in _: Int) {}
+      
+        @ReactMethod
+        @objc
+        func test5(_: Int) {}
+      
+        @ReactMethod
+        @objc
+        func test6(_: Int, text: String) {}
+      
+        @ReactMethod
+        @objc
+        func test7(_: Int, _ text: String) {}
+      
+        @ReactMethod
+        @objc
+        func test8(_: Int, text _: String) {}
+      
+        @ReactMethod
+        @objc
+        func test9(_: Int, _: String) {}
+      
+        @ReactMethod
+        @objc
+        func test10(_ text: String?) {}
       }
       """,
       expandedSource:
       """
       class A {
         @objc
-        func test(count: Int) {}
+        func test1(count: Int) {}
       
-        @objc static func __rct_export__test() -> UnsafePointer<RCTMethodInfo>? {
-          struct Static {
-            static var methodInfo = RCTMethodInfo(
-              jsName: NSString(string: "test").utf8String,
-              objcName: NSString(string: "testWithCount:(NSInteger)count").utf8String,
-              isSync: false
-            )
-          }
-          return withUnsafePointer(to: &Static.methodInfo) {
-              $0
-          }
-        }
+        \(rct_export(name: "test1", selector: "test1WithCount:(NSInteger)count"))
+        @objc
+        func test2(_ count: Int) {}
+      
+        \(rct_export(name: "test2", selector: "test2:(NSInteger)count"))
+        @objc
+        func test3(in count: Int) {}
+      
+        \(rct_export(name: "test3", selector: "test3In:(NSInteger)count"))
+        @objc
+        func test4(in _: Int) {}
+      
+        \(rct_export(name: "test4", selector: "test4In:(NSInteger)_"))
+        @objc
+        func test5(_: Int) {}
+      
+        \(rct_export(name: "test5", selector: "test5:(NSInteger)_"))
+        @objc
+        func test6(_: Int, text: String) {}
+      
+        \(rct_export(name: "test6", selector: "test6:(NSInteger)_ text:(NSString * _Nonnull)text"))
+        @objc
+        func test7(_: Int, _ text: String) {}
+      
+        \(rct_export(name: "test7", selector: "test7:(NSInteger)_ :(NSString * _Nonnull)text"))
+        @objc
+        func test8(_: Int, text _: String) {}
+      
+        \(rct_export(name: "test8", selector: "test8:(NSInteger)_ text:(NSString * _Nonnull)_"))
+        @objc
+        func test9(_: Int, _: String) {}
+      
+        \(rct_export(name: "test9", selector: "test9:(NSInteger)_ :(NSString * _Nonnull)_"))
+        @objc
+        func test10(_ text: String?) {}
+      
+        \(rct_export(name: "test10", selector: "test10:(NSString * _Nullable)text"))
       }
       """,
       macros: macros
@@ -124,20 +202,34 @@ final class ReactMethodTests: XCTestCase {
         @objc
         func test(count: Int) {}
       
-        @objc static func __rct_export__test() -> UnsafePointer<RCTMethodInfo>? {
-          struct Static {
-            static var methodInfo = RCTMethodInfo(
-              jsName: NSString(string: "add").utf8String,
-              objcName: NSString(string: "testWithCount:(NSInteger)count").utf8String,
-              isSync: true
-            )
-          }
-          return withUnsafePointer(to: &Static.methodInfo) {
-              $0
-          }
-        }
+        \(rct_export(name: "test", selector: "testWithCount:(NSInteger)count", isSync: true, jsName: "add"))
       }
       """,
+      macros: macros
+    )
+  }
+  
+  func test_returnType() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.nonSync.message, line: 2, column: 3, severity: .warning)
+    
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        @objc
+        func test() -> Int {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test() -> Int {}
+      
+        \(rct_export(name: "test", selector: "test"))
+      }
+      """,
+      diagnostics: [diagnostic],
       macros: macros
     )
   }
@@ -314,12 +406,20 @@ final class ReactViewPropertyTests: XCTestCase {
       """
       class View {
         @ReactViewProperty
+        var id: String
+      
+        @ReactViewProperty
         var title: String?
       }
       """,
       expandedSource:
       """
       class View {
+        var id: String
+      
+        @objc static func propConfig_id() -> [String] {
+          ["NSString"]
+        }
         var title: String?
       
         @objc static func propConfig_title() -> [String] {

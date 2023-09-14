@@ -1,5 +1,5 @@
 //
-//  ExprSyntax.swift
+//  TypeSyntax.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/08/10.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -29,75 +29,63 @@ import SwiftDiagnostics
 
 extension TypeSyntax {
   
-  func objcType(isRoot: Bool = false) throws -> String {
-    let nonnull = isRoot ? " _Nonnull" : ""
-    
-    // Simple
+  func objcType() throws -> ObjcType {
     if let identifier = self.as(IdentifierTypeSyntax.self) {
       let swiftType = "\(identifier.name.trimmed)"
       
-      // Generic: Type<type>
+      // Generic
       if let generic = identifier.genericArgumentClause {
         switch swiftType {
-            //case "Optional":
           case "Array":
             if let argument = generic.arguments.first?.argument {
-              let elementType = try argument.objcType()
-              return "NSArray<\(elementType)> *\(nonnull)"
+              let type = try argument.objcType()
+              return .array(type)
             }
-            break;
             
-            // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
           case "Dictionary":
-            // Verify key and value types
-            for argument in generic.arguments {
-              let _ = try argument.argument.objcType()
+            if let keyType = try generic.arguments.first?.argument.objcType(), let valueType = try generic.arguments.last?.argument.objcType() {
+              return .dictionary(keyType, valueType)
             }
-            return "NSDictionary *\(nonnull)"
             
-            // MARK: React Native doesn't support type parameters for NSSet e.g.: NSSet<NSString *>
           case "Set":
-            // Verify type
-            for argument in generic.arguments {
-              let _ = try argument.argument.objcType()
+            if let type = try generic.arguments.first?.argument.objcType() {
+              return .set(type)
             }
-            return "NSSet *\(nonnull)"
+            
+          case "Optional":
+            if let type = try generic.arguments.first?.argument.objcType() {
+              return .optional(type)
+            }
             
           default:
             throw Diagnostic(node: identifier.name, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
       }
-      // Non generic
+      // Regular
       else {
         guard let objcType = ObjcType(swiftType: swiftType) else {
           throw Diagnostic(node: identifier.name, message: ErrorMessage.unsupportedType(typeName: swiftType))
         }
-        
-        let type = (isRoot == false && objcType.kind == .numeric) ? "NSNumber *" : objcType.name
-        let asterisk = (objcType.kind == .object && objcType.name != "id") ? " *\(nonnull)" : ""
-        
-        return "\(type)\(asterisk)"
+        return objcType
       }
     }
-    // Optional: ?!
+    // Optional
     else if let optional = self.as(OptionalTypeSyntax.self) {
-      let wrappedType = try optional.wrappedType.objcType()
-      return "\(wrappedType) _Nullable"
+      let type = try optional.wrappedType.objcType()
+      return .optional(type)
     }
-    // Array: []
+    // Array
     else if let array = self.as(ArrayTypeSyntax.self) {
-      let objcType = try array.element.objcType()
-      return "NSArray<\(objcType)> *\(nonnull)"
+      let type = try array.element.objcType()
+      return .array(type)
     }
-    // Dictionary: [:]
-    // MARK: React Native doesn't support type parameters for NSDictionary e.g.: NSDictionary<NSString *, NSNumber *>
+    // Dictionary
     else if let dictionary = self.as(DictionaryTypeSyntax.self) {
-      // Verify key and value types
-      let _ = try dictionary.key.objcType()
-      let _ = try dictionary.value.objcType()
-      
-      return "NSDictionary *\(nonnull)"
+      let keyType = try dictionary.key.objcType()
+      let valueType = try dictionary.value.objcType()
+      return .dictionary(keyType, valueType)
     }
+    
     throw Diagnostic(node: self, message: ErrorMessage.unsupportedType(typeName: "\(trimmed)"))
   }
 }
