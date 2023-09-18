@@ -14,7 +14,7 @@ let package = Package(
     )
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0-swift-DEVELOPMENT-SNAPSHOT-2023-08-28-a"),
+    .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
   ],
   targets: [
     .macro(
@@ -24,15 +24,14 @@ let package = Package(
         .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
       ]
     ),
-    .target(name: "ReactBridge", dependencies: ["ReactBridgeMacros", "RegisterModules"]),
+    .target(
+      name: "ReactBridge",
+      dependencies: ["ReactBridgeMacros", "RegisterModules"]
+    ),
     .target(name: "RegisterModules"),
     .testTarget(
       name: "ReactBridgeTests",
-      dependencies: [
-        "ReactBridgeMacros",
-        "ReactBridge",
-        .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax"),
-      ]
+      dependencies: ["ReactBridgeMacros", "ReactBridge", .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")]
     ),
   ]
 )
