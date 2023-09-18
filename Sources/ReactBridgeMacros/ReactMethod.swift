@@ -53,7 +53,7 @@ extension ReactMethod: PeerMacro {
     
     let parameterList = funcDecl.signature.parameterClause.parameters
     for param in parameterList {
-      let objcType = try param.type.trimmed.objcType().text(root: true)
+      let objcType = try param.type.objcType().text(root: true)
       var firstName = "\(param.firstName.trimmed)"
       
       if param == parameterList.first {

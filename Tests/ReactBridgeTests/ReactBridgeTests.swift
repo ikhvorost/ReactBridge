@@ -19,10 +19,10 @@ class A: NSObject, RCTBridgeModule {
 @ReactView()
 class ViewManager: RCTViewManager {
   
-  @ReactViewProperty()
-  var title: String?
+  @ReactProperty()
+  var title: Int?
   
-  // @ReactViewProperty()
+  // @ReactProperty()
   // var onData: RCTBubblingEventBlock?
 }
 
@@ -354,18 +354,18 @@ final class ReactModuleTests: XCTestCase {
   }
 }
 
-final class ReactViewPropertyTests: XCTestCase {
+final class ReactPropertyTests: XCTestCase {
   let macros: [String: Macro.Type] = [
-    "ReactViewProperty": ReactViewProperty.self,
+    "ReactProperty": ReactProperty.self,
   ]
   
   func test_func() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.varOnly(macroName: "ReactViewProperty").message, line: 2, column: 3)
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.varOnly(macroName: "ReactProperty").message, line: 2, column: 3)
     
     assertMacroExpansion(
       """
       class View {
-        @ReactViewProperty
+        @ReactProperty
         func hide() {}
       }
       """,
@@ -386,7 +386,7 @@ final class ReactViewPropertyTests: XCTestCase {
     assertMacroExpansion(
       """
       class View {
-        @ReactViewProperty
+        @ReactProperty
         var color: CGColor?
       }
       """,
@@ -405,10 +405,10 @@ final class ReactViewPropertyTests: XCTestCase {
     assertMacroExpansion(
       """
       class View {
-        @ReactViewProperty
+        @ReactProperty
         var id: String
       
-        @ReactViewProperty
+        @ReactProperty
         var title: String?
       }
       """,

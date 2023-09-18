@@ -40,4 +40,4 @@ public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externa
 public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactView")
 
 @attached(peer, names: prefixed(propConfig_))
-public macro ReactViewProperty() = #externalMacro(module: "ReactBridgeMacros", type: "ReactViewProperty")
+public macro ReactProperty() = #externalMacro(module: "ReactBridgeMacros", type: "ReactProperty")

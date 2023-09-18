@@ -1,5 +1,5 @@
 //
-//  ReactView.swift
+//  ReactProperty.swift
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/09/06.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -28,10 +28,10 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactViewProperty {
+public struct ReactProperty {
 }
 
-extension ReactViewProperty: PeerMacro {
+extension ReactProperty: PeerMacro {
   
   private static func propConfig(name: String, objcType: String) -> DeclSyntax {
     """
