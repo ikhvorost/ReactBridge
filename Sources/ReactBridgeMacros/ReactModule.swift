@@ -90,8 +90,8 @@ extension ReactModule: MemberMacro {
       
       let arguments = node.arguments()
       
-      let jsName = arguments?["jsName"]?.stringValue ?? "\"\(className)\""
-      let mainQueueSetup = arguments?["requiresMainQueueSetup"]?.boolValue == true
+      let jsName = arguments["jsName"]?.stringValue ?? "\"\(className)\""
+      let mainQueueSetup = arguments["requiresMainQueueSetup"]?.boolValue == true
       
       var items: [DeclSyntax] = [
         moduleName(name: jsName),
@@ -99,7 +99,7 @@ extension ReactModule: MemberMacro {
         registerModule
       ]
       
-      if let queue = arguments?["methodQueue"]?.stringValue {
+      if let queue = arguments["methodQueue"]?.stringValue {
         items.append(methodQueue(queue: queue))
       }
       

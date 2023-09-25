@@ -26,23 +26,16 @@
 import SwiftSyntax
 
 
-fileprivate extension Dictionary {
-  func mergingNew(dict: Dictionary) -> Dictionary {
-    merging(dict) { _, new in new }
-  }
-}
-
 extension AttributeSyntax {
   
-  func arguments() -> [String : ExprSyntax]? {
-    arguments?.as(LabeledExprListSyntax.self)?
-      .compactMap {
-        guard let label = $0.label?.trimmed else {
-          return nil
-        }
-        return [label.text : $0.expression.trimmed]
+  func arguments() -> [String : ExprSyntax] {
+    var dict = [String : ExprSyntax]()
+    arguments?.as(LabeledExprListSyntax.self)?.forEach {
+      if let name = $0.label?.trimmed.text {
+        dict[name] = $0.expression.trimmed
       }
-      .reduce([:], { $0.mergingNew(dict: $1) })
+    }
+    return dict
   }
 }
 

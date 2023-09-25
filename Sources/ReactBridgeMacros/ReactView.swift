@@ -53,7 +53,7 @@ extension ReactView: MemberMacro {
       }
       
       let arguments = node.arguments()
-      let jsName = arguments?["jsName"]?.stringValue ?? "\"\(className)\""
+      let jsName = arguments["jsName"]?.stringValue ?? "\"\(className)\""
       
       return [
         ReactModule.registerModule,

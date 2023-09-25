@@ -101,8 +101,8 @@ extension ReactMethod: PeerMacro {
       
       let arguments = node.arguments()
       
-      let jsName = arguments?["jsName"]?.stringValue ?? "\"\(funcName)\""
-      let isSync = arguments?["isSync"]?.boolValue == true
+      let jsName = arguments["jsName"]?.stringValue ?? "\"\(funcName)\""
+      let isSync = arguments["isSync"]?.boolValue == true
       
       // Return type
       if let returnType = funcDecl.signature.returnClause?.type {
