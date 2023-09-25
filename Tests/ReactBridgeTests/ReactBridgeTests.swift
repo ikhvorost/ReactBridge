@@ -20,7 +20,7 @@ class A: NSObject, RCTBridgeModule {
 class ViewManager: RCTViewManager {
   
   @ReactProperty
-  var a: Int?
+  var i: Int?
 }
 
 // */
@@ -452,6 +452,42 @@ final class ReactPropertyTests: XCTestCase {
     )
   }
   
+  func test_unsupported() {
+    let unsupported1 = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "MyType").message, line: 3, column: 10)
+    let unsupported2 = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 6, column: 14)
+    let unsupported3 = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "(Int, String)").message, line: 9, column: 14)
+    let unsupported4 = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "((Int) -> Void)").message, line: 12, column: 10)
+    
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactProperty
+        var a: MyType<Int>?
+      
+        @ReactProperty
+        var color: CGColor?
+      
+        @ReactProperty
+        var tuple: (Int, String)?
+      
+        @ReactProperty
+        var f: ((Int) -> Void)?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var a: MyType<Int>?
+        var color: CGColor?
+        var tuple: (Int, String)?
+        var f: ((Int) -> Void)?
+      }
+      """,
+      diagnostics: [unsupported1, unsupported2, unsupported3, unsupported4],
+      macros: macros
+    )
+  }
+  
   func test_default() {
     assertMacroExpansion(
       """
@@ -470,6 +506,18 @@ final class ReactPropertyTests: XCTestCase {
       
         @ReactProperty
         var dict: [String : Int]?
+      
+        @ReactProperty
+        var title: Optional<String>
+      
+        @ReactProperty
+        var array: Array<String>?
+      
+        @ReactProperty
+        var dict: Dictionary<String, Int>?
+      
+        @ReactProperty
+        var set: Set<String>?
       
         @ReactProperty
         var onData: RCTBubblingEventBlock?
@@ -493,32 +541,23 @@ final class ReactPropertyTests: XCTestCase {
         var dict: [String : Int]?
       
         \(propConfig(name: "dict", objcType: "NSDictionary"))
+        var title: Optional<String>
+      
+        \(propConfig(name: "title", objcType: "NSString"))
+        var array: Array<String>?
+      
+        \(propConfig(name: "array", objcType: "NSArray"))
+        var dict: Dictionary<String, Int>?
+      
+        \(propConfig(name: "dict", objcType: "NSDictionary"))
+        var set: Set<String>?
+      
+        \(propConfig(name: "set", objcType: "NSSet"))
         var onData: RCTBubblingEventBlock?
       
         \(propConfig(name: "onData", objcType: "RCTBubblingEventBlock"))
       }
       """,
-      macros: macros
-    )
-  }
-  
-  func test_unsupportedType() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 3, column: 14)
-    
-    assertMacroExpansion(
-      """
-      class View {
-        @ReactProperty
-        var color: CGColor?
-      }
-      """,
-      expandedSource:
-      """
-      class View {
-        var color: CGColor?
-      }
-      """,
-      diagnostics: [diagnostic],
       macros: macros
     )
   }
