@@ -35,9 +35,9 @@ extension ExprSyntax {
   }
   
   var boolValue: Bool? {
-    if let booleanLiteral = self.as(BooleanLiteralExprSyntax.self) {
-      return booleanLiteral.literal.tokenKind == .keyword(.true)
+    guard let tokenKind = self.as(BooleanLiteralExprSyntax.self)?.literal.tokenKind else {
+      return nil
     }
-    return nil
+    return tokenKind == .keyword(.true)
   }
 }

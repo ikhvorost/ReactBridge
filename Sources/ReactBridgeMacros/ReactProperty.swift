@@ -52,13 +52,9 @@ extension ReactProperty: PeerMacro {
         throw Diagnostic(node: declaration, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
-      // Error: single
-      guard varDecl.bindings.count == 1 else {
+      // Error: single var
+      guard varDecl.bindings.count == 1, let item = varDecl.bindings.first, let type = item.typeAnnotation?.type else {
         throw Diagnostic(node: varDecl.bindings, message: ErrorMessage.varSingleOnly(macroName: "\(self)"))
-      }
-      
-      guard let item = varDecl.bindings.first, let type = item.typeAnnotation?.type else {
-        return []
       }
       
       let name = "\(item.pattern.trimmed)"
