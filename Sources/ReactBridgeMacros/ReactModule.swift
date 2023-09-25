@@ -28,7 +28,7 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactModule {
+struct ReactModule {
 }
 
 extension ReactModule: MemberMacro {
@@ -64,7 +64,7 @@ extension ReactModule: MemberMacro {
     """
   }
   
-  public static func expansion(
+  static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)

@@ -28,7 +28,7 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactProperty {
+struct ReactProperty {
 }
 
 extension ReactProperty: PeerMacro {
@@ -41,7 +41,7 @@ extension ReactProperty: PeerMacro {
     """
   }
   
-  public static func expansion(
+  static func expansion(
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
     in context: some MacroExpansionContext) 

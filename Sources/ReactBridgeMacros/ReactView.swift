@@ -28,12 +28,12 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactView {
+struct ReactView {
 }
 
 extension ReactView: MemberMacro {
   
-  public static func expansion(
+  static func expansion(
     of node: AttributeSyntax,
     providingMembersOf declaration: some DeclGroupSyntax,
     in context: some MacroExpansionContext)

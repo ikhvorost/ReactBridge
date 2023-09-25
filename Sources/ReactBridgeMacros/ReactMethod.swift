@@ -28,7 +28,7 @@ import SwiftSyntaxMacros
 import SwiftDiagnostics
 
 
-public struct ReactMethod {
+struct ReactMethod {
 }
 
 extension ReactMethod: PeerMacro {
@@ -78,7 +78,7 @@ extension ReactMethod: PeerMacro {
     return selector
   }
 
-  public static func expansion(
+  static func expansion(
     of node: AttributeSyntax,
     providingPeersOf declaration: some DeclSyntaxProtocol,
     in context: some MacroExpansionContext)
