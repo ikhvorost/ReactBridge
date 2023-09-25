@@ -91,11 +91,9 @@ extension ReactMethod: PeerMacro {
       }
       
       // Error: @objc
-      guard let attributes = funcDecl.attributes.as(AttributeListSyntax.self),
-            attributes.first(where: { $0.description.contains("@objc") }) != nil
-      else {
+      guard funcDecl.attributes.isObjc else {
         let funcName = "\(funcDecl.name.trimmed)"
-        throw Diagnostic(node: funcDecl, message: ErrorMessage.objcOnly(funcName: funcName))
+        throw Diagnostic(node: funcDecl, message: ErrorMessage.objcOnly(name: funcName))
       }
     
       let objcName = try objcSelector(funcDecl: funcDecl)
@@ -114,11 +112,9 @@ extension ReactMethod: PeerMacro {
           context.diagnose(diagnostic)
         }
         
-        // TODO: check return type
-        let swiftType = try returnType.objcType()
-        if case .number = swiftType {
-          // Warning: non class return type
-          //throw Diagnostic(node: returnType, message: ErrorMessage.nonClassReturnType)
+        let objcType = try returnType.objcType()
+        guard case .object = objcType else {
+          throw Diagnostic(node: returnType, message: ErrorMessage.mustBeClass)
         }
       }
       

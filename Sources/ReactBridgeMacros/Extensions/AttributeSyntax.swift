@@ -45,3 +45,9 @@ extension AttributeSyntax {
       .reduce([:], { $0.mergingNew(dict: $1) })
   }
 }
+
+extension AttributeListSyntax {
+  var isObjc: Bool {
+    first { $0.trimmed.description == "@objc"} != nil
+  }
+}

@@ -10,8 +10,8 @@ import ReactBridge
 @ReactModule()
 class A: NSObject, RCTBridgeModule {
 
-  @ReactMethod()
-  @objc func test(text: Int) -> Int {
+  @ReactMethod(isSync: true)
+  @objc func test(text: Int) -> NSNumber {
     0
   }
 }
@@ -19,11 +19,8 @@ class A: NSObject, RCTBridgeModule {
 @ReactView()
 class ViewManager: RCTViewManager {
   
-  @ReactProperty()
-  var title: Int?
-  
-  // @ReactProperty()
-  // var onData: RCTBubblingEventBlock?
+  @ReactProperty
+  var a: Int?
 }
 
 // */
@@ -73,7 +70,7 @@ final class ReactMethodTests: XCTestCase {
   }
   
   func test_objc() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.objcOnly(funcName: "test").message, line: 2, column: 3)
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.objcOnly(name: "test").message, line: 2, column: 3)
     
     assertMacroExpansion(
       """
@@ -209,13 +206,38 @@ final class ReactMethodTests: XCTestCase {
     )
   }
   
-  func test_returnType() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.nonSync.message, line: 2, column: 3, severity: .warning)
+  func test_nonSync() {
+    let nonSync = DiagnosticSpec(message: ErrorMessage.nonSync.message, line: 2, column: 3, severity: .warning)
     
     assertMacroExpansion(
       """
       class A {
         @ReactMethod
+        @objc
+        func test() -> String {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test() -> String {}
+      
+        \(rct_export(name: "test", selector: "test"))
+      }
+      """,
+      diagnostics: [nonSync],
+      macros: macros
+    )
+  }
+  
+  func test_mustBeClass() {
+    let mustBeClass = DiagnosticSpec(message: ErrorMessage.mustBeClass.message, line: 4, column: 18, severity: .error)
+    
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod(isSync: true)
         @objc
         func test() -> Int {}
       }
@@ -225,8 +247,29 @@ final class ReactMethodTests: XCTestCase {
       class A {
         @objc
         func test() -> Int {}
-      
-        \(rct_export(name: "test", selector: "test"))
+      }
+      """,
+      diagnostics: [mustBeClass],
+      macros: macros
+    )
+  }
+
+  func test_unsupportedType() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 4, column: 20)
+    
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        @objc
+        func test(color: CGColor) {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test(color: CGColor) {}
       }
       """,
       diagnostics: [diagnostic],
@@ -359,6 +402,14 @@ final class ReactPropertyTests: XCTestCase {
     "ReactProperty": ReactProperty.self,
   ]
   
+  func propConfig(name: String, objcType: String) -> String {
+    """
+    @objc static func propConfig_\(name)() -> [String] {
+        ["\(objcType)"]
+      }
+    """
+  }
+  
   func test_func() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.varOnly(macroName: "ReactProperty").message, line: 2, column: 3)
     
@@ -380,7 +431,78 @@ final class ReactPropertyTests: XCTestCase {
     )
   }
   
-  func test_badType() {
+  func test_multiple() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.varSingleOnly(macroName: "ReactProperty").message, line: 3, column: 7)
+    
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactProperty
+        var a, b: Int?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var a, b: Int?
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
+  func test_default() {
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactProperty
+        var id: Int?
+      
+        @ReactProperty
+        var name: String = ""
+      
+        @ReactProperty
+        var title: String?
+      
+        @ReactProperty
+        var array: [String]?
+      
+        @ReactProperty
+        var dict: [String : Int]?
+      
+        @ReactProperty
+        var onData: RCTBubblingEventBlock?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var id: Int?
+      
+        \(propConfig(name: "id", objcType: "NSInteger"))
+        var name: String = ""
+      
+        \(propConfig(name: "name", objcType: "NSString"))
+        var title: String?
+      
+        \(propConfig(name: "title", objcType: "NSString"))
+        var array: [String]?
+      
+        \(propConfig(name: "array", objcType: "NSArray"))
+        var dict: [String : Int]?
+      
+        \(propConfig(name: "dict", objcType: "NSDictionary"))
+        var onData: RCTBubblingEventBlock?
+      
+        \(propConfig(name: "onData", objcType: "RCTBubblingEventBlock"))
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_unsupportedType() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.unsupportedType(typeName: "CGColor").message, line: 3, column: 14)
     
     assertMacroExpansion(
@@ -397,36 +519,6 @@ final class ReactPropertyTests: XCTestCase {
       }
       """,
       diagnostics: [diagnostic],
-      macros: macros
-    )
-  }
-  
-  func test_default() {
-    assertMacroExpansion(
-      """
-      class View {
-        @ReactProperty
-        var id: String
-      
-        @ReactProperty
-        var title: String?
-      }
-      """,
-      expandedSource:
-      """
-      class View {
-        var id: String
-      
-        @objc static func propConfig_id() -> [String] {
-          ["NSString"]
-        }
-        var title: String?
-      
-        @objc static func propConfig_title() -> [String] {
-          ["NSString"]
-        }
-      }
-      """,
       macros: macros
     )
   }

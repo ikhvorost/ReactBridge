@@ -30,22 +30,25 @@ import SwiftSyntax
 extension Diagnostic: Error {}
 
 enum ErrorMessage: DiagnosticMessage {
-  // Error
+  // Errors
   case funcOnly(macroName: String)
   case classOnly(macroName: String)
   case varOnly(macroName: String)
-  case objcOnly(funcName: String)
+  case varSingleOnly(macroName: String)
+  case objcOnly(name: String)
+  
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
-  case unsupportedType(typeName: String)
-  case nonClassReturnType
+  case mustBeClass
   
-  // Warning
+  case unsupportedType(typeName: String)
+  
+  // Warnings
   case nonSync
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .nonClassReturnType:
+      case .funcOnly, .classOnly, .varOnly, .varSingleOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .mustBeClass:
         return .error
       case .nonSync:
         return .warning
@@ -60,16 +63,18 @@ enum ErrorMessage: DiagnosticMessage {
         return "@\(macroName) can only be applied to a class"
       case .varOnly(let macroName):
         return "@\(macroName) can only be applied to a var"
-      case .objcOnly(let funcName):
-        return "'\(funcName)' must be marked with '@objc'"
+      case .varSingleOnly(let macroName):
+        return "@\(macroName) can only be applied to a single var"
+      case .objcOnly(let name):
+        return "'\(name)' must be marked with '@objc'"
       case .mustInherit(let className, let superclassName):
         return "'\(className)' must inherit '\(superclassName)'"
       case .mustConform(let className, let protocolName):
         return "'\(className)' must conform '\(protocolName)'"
+      case .mustBeClass:
+        return "Return type must be any class type or 'Any'"
       case .unsupportedType(let typeName):
         return "'\(typeName)' type is not supported"
-      case .nonClassReturnType:
-        return "Return type must be a class type or 'Any'"
         
       case .nonSync:
         return "Functions with a defined return type should be synchronous"

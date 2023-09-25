@@ -41,9 +41,10 @@ fileprivate let objectMap: [String : [String]] = [
   "NSDictionary": ["NSMutableDictionary"],
   "NSSet": ["NSMutableSet"],
   "UIColor": [],
+  "NSColor": [],
 ]
 
-fileprivate let numericMap: [String : [String]] = [
+fileprivate let numberMap: [String : [String]] = [
   "BOOL": ["Bool"],
   "NSInteger": ["Int", "Int8", "Int16", "Int32", "Int64"],
   "NSUInteger": ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"],
@@ -91,7 +92,7 @@ indirect enum ObjcType {
     if let objcType = objcType(swiftType: swiftType, map: objectMap) {
       self = .object(objcType)
     }
-    else if let objcType = objcType(swiftType: swiftType, map: numericMap) {
+    else if let objcType = objcType(swiftType: swiftType, map: numberMap) {
       self = .number(objcType)
     }
     else if let objcType = objcType(swiftType: swiftType, map: structMap) {

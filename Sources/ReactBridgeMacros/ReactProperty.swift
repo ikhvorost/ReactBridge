@@ -52,15 +52,18 @@ extension ReactProperty: PeerMacro {
         throw Diagnostic(node: declaration, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
-      // TODO: var first, second: Type
-      return try varDecl.bindings.compactMap {
-        guard let type = $0.typeAnnotation?.type else {
-          return nil
-        }
-        let name = "\($0.pattern.trimmed)"
-        let objcType = try type.objcType().type()
-        return propConfig(name: name, objcType: objcType)
+      // Error: single
+      guard varDecl.bindings.count == 1 else {
+        throw Diagnostic(node: varDecl.bindings, message: ErrorMessage.varSingleOnly(macroName: "\(self)"))
       }
+      
+      guard let item = varDecl.bindings.first, let type = item.typeAnnotation?.type else {
+        return []
+      }
+      
+      let name = "\(item.pattern.trimmed)"
+      let objcType = try type.objcType()
+      return [propConfig(name: name, objcType: objcType.type())]
     }
     catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)
