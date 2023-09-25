@@ -10,9 +10,10 @@ import ReactBridge
 @ReactModule()
 class A: NSObject, RCTBridgeModule {
 
-  @ReactMethod(isSync: true)
-  @objc func test(text: Int) -> NSNumber {
-    0
+  @ReactMethod
+  @objc
+  func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {
+    
   }
 }
 
@@ -133,6 +134,10 @@ final class ReactMethodTests: XCTestCase {
         @ReactMethod
         @objc
         func test10(_ text: String?) {}
+      
+        @ReactMethod
+        @objc
+        func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
       }
       """,
       expandedSource:
@@ -178,6 +183,10 @@ final class ReactMethodTests: XCTestCase {
         func test10(_ text: String?) {}
       
         \(rct_export(name: "test10", selector: "test10:(NSString * _Nullable)text"))
+        @objc
+        func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
+      
+        \(rct_export(name: "test11", selector: "test11WithPoint:(CGPoint)point array:(NSArray<NSNumber *> * _Nonnull)array dict:(NSDictionary * _Nonnull)dict set:(NSSet * _Nonnull)set"))
       }
       """,
       macros: macros

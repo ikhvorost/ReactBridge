@@ -36,11 +36,9 @@ enum ErrorMessage: DiagnosticMessage {
   case varOnly(macroName: String)
   case varSingleOnly(macroName: String)
   case objcOnly(name: String)
-  
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
   case mustBeClass
-  
   case unsupportedType(typeName: String)
   
   // Warnings
