@@ -33,10 +33,10 @@ struct ReactProperty {
 
 extension ReactProperty: PeerMacro {
   
-  private static func propConfig(name: String, objcType: String) -> DeclSyntax {
+  private static func propConfig(name: String, objcType: String, keyPath: String) -> DeclSyntax {
     """
     @objc static func propConfig_\(raw: name)() -> [String] {
-      ["\(raw: objcType)"]
+      ["\(raw: objcType)", \(raw: keyPath)]
     }
     """
   }
@@ -59,7 +59,11 @@ extension ReactProperty: PeerMacro {
       
       let name = "\(item.pattern.trimmed)"
       let objcType = try type.objcType()
-      return [propConfig(name: name, objcType: objcType.type())]
+      let keyPath = node.arguments()["keyPath"]?.stringValue
+      
+      return [
+        propConfig(name: name, objcType: objcType.type(), keyPath: keyPath ?? "\"\(name)\"")
+      ]
     }
     catch let diagnostic as Diagnostic {
       context.diagnose(diagnostic)

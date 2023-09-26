@@ -7,21 +7,19 @@ import XCTest
 //*
 import ReactBridge
 
-@ReactModule()
-class A: NSObject, RCTBridgeModule {
+@ReactModule
+class Calendar: NSObject, RCTBridgeModule {
 
   @ReactMethod
-  @objc
-  func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {
-    
+  @objc func createCalendarEvent(name: String, location: String) {
   }
 }
 
 @ReactView()
-class ViewManager: RCTViewManager {
+class MapManager: RCTViewManager {
   
-  @ReactProperty
-  var i: Int?
+  @ReactProperty()
+  var zoomEnabled: Bool?
 }
 
 // */

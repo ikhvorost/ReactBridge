@@ -52,8 +52,7 @@ extension ReactView: MemberMacro {
         throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustInherit(className: className, superclassName: "RCTViewManager"))
       }
       
-      let arguments = node.arguments()
-      let jsName = arguments["jsName"]?.stringValue ?? "\"\(className)\""
+      let jsName = node.arguments()["jsName"]?.stringValue ?? "\"\(className)\""
       
       return [
         ReactModule.registerModule,
