@@ -409,10 +409,10 @@ final class ReactPropertyTests: XCTestCase {
     "ReactProperty": ReactProperty.self,
   ]
   
-  func propConfig(name: String, objcType: String) -> String {
+  func propConfig(name: String, objcType: String, keyPath: String? = nil) -> String {
     """
     @objc static func propConfig_\(name)() -> [String] {
-        ["\(objcType)"]
+        ["\(objcType)", "\(keyPath ?? name)"]
       }
     """
   }
@@ -528,6 +528,9 @@ final class ReactPropertyTests: XCTestCase {
       
         @ReactProperty
         var onData: RCTBubblingEventBlock?
+      
+        @ReactProperty(keyPath: "muted")
+        var isMute: Bool?
       }
       """,
       expandedSource:
@@ -563,6 +566,9 @@ final class ReactPropertyTests: XCTestCase {
         var onData: RCTBubblingEventBlock?
       
         \(propConfig(name: "onData", objcType: "RCTBubblingEventBlock"))
+        var isMute: Bool?
+      
+        \(propConfig(name: "isMute", objcType: "BOOL", keyPath: "muted"))
       }
       """,
       macros: macros
