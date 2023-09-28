@@ -1,21 +1,20 @@
 # ReactBridge
 
-[![Swift 5](https://img.shields.io/badge/Swift-5-f48041.svg?style=flat)](https://developer.apple.com/swift)
-![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat)
-[![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat)](https://swift.org/package-manager/)
-[![Build](https://github.com/ikhvorost/KeyValueCoding/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/ikhvorost/KeyValueCoding/actions/workflows/swift.yml)
-[![Codecov](https://codecov.io/gh/ikhvorost/KeyValueCoding/branch/main/graph/badge.svg?token=26NymxLQyB)](https://codecov.io/gh/ikhvorost/KeyValueCoding)
-[![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37)](https://github.com/SwiftDocOrg/swift-doc)
+[![Swift 5.9](https://img.shields.io/badge/Swift-5.9-f48041.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
+[![React Native 0.60](https://img.shields.io/badge/React%20Native-0.60-61dafb.svg?style=flat&logo=react)](https://reactnative.dev/)
+[![SwiftPM compatible](https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
+![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat&logo=apple)
+[![Build](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml/badge.svg?branch=main)](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml)
+[![Codecov](https://codecov.io/gh/ikhvorost/ReactBridge/branch/main/graph/badge.svg?token=26NymxLQyB)](https://codecov.io/gh/ikhvorost/ReactBridge)
 
-GitHubSponsor
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
-`ReactBridge` provides Swift macros to make React Native Modules and UI Components.
+`ReactBridge` provides Swift macros to expose Native Modules with their methods and Native UI Components to JavaScript.
 
 - [Getting Started](#getting-started)
   - [Native Module](#native-module)
   - [Native UI Component](#native-ui-component)
-- [Macros](#macros)
+- [Documentation](#documentation)
   - [`@ReactModule`](#reactmodule)
   - [`@ReactMethod`](#reactmethod)
   - [`@ReactView`](#reactview)
@@ -30,7 +29,7 @@ GitHubSponsor
 
 ### Native Module
 
-Attach `@ReactModule` macro to your class definition and which exports and registers the native module class with React Native and that will allow you to access its code from JavaScript:
+Attach `@ReactModule` macro to your class definition and it exports and registers the native module class with React Native and that will allow you to access its code from JavaScript:
 
 ``` swift
 @ReactModule
@@ -59,6 +58,8 @@ import { NativeModules } from 'react-native';
 const { Calendar } = NativeModules;
 ```
 
+**Methods**
+
 React Native will not expose any methods in a native module to JavaScript unless explicitly told to. This can be done using the `@ReactMethod` macro:
 
 ``` swift
@@ -66,8 +67,8 @@ React Native will not expose any methods in a native module to JavaScript unless
 class CalendarModule: NSObject, RCTBridgeModule {
   
   @ReactMethod
-  @objc func createEvent(name: String, location: String) {
-    print("Create event '\(name)' at '\(location)'")
+  @objc func createEvent(title: String, location: String) {
+    print("Create event '\(title)' at '\(location)'")
   }
 }
 ```
@@ -81,11 +82,61 @@ Now that you have the `CalendarModule` native module available, you can invoke y
 Calendar.createEvent('Wedding', 'Las Vegas');
 ```
 
-Methods marked with `@ReactMethod` macro are asynchronous by default.
+**Callbacks**
+
+Methods marked with `@ReactMethod` macro are asynchronous by default but if it's needed to to pass data from Swift to JavaScript you can use the callback parameter with type `RCTResponseSenderBlock`: 
+
+``` swift
+@ReactMethod
+@objc func createEvent(title: String, location: String, callback: RCTResponseSenderBlock) {
+  print("Create event '\(title)' at '\(location)'")
+  let eventId = 10;
+  callback([eventId])
+}
+```
+
+This method could then be accessed in JavaScript using the following:
+
+``` js
+Calendar.createEvent('Wedding', 'Las Vegas', eventId => {
+  console.log(`Created a new event with id ${eventId}`);
+});
+```
+
+**Promises**
+
+Native modules can also fulfill a promise, which can simplify your JavaScript, especially when using async/await syntax:
+
+``` swift
+@ReactMethod
+@objc func createEvent(title: String, location: String, resolve: RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {
+  do {
+    let eventId = try createEvent(title: title, location: location)
+    resolve(eventId)
+  }
+  catch let error as NSError {
+    reject("\(error.code)", error.localizedDescription, error)
+  }
+}
+```
+
+The JavaScript counterpart of this method returns a Promise:
+
+``` js
+Calendar.createEvent('Wedding', 'Las Vegas')
+  .then(eventId => {
+    console.log(`Created a new event with id ${eventId}`);
+  })
+  .catch(error => {
+    console.error(`Error: ${error}`);
+  });
+```
+
+For more details about Native Modules, see: https://reactnative.dev/docs/native-modules-ios.
 
 ### Native UI Component
 
-## Macros
+## Documentation
 
 ### @ReactModule
 
@@ -99,6 +150,7 @@ Methods marked with `@ReactMethod` macro are asynchronous by default.
 
 - Xcode 15 or later.
 - Swift 5.9 or later.
+- React Native 0.60 or later.
 
 ## Installation
 
