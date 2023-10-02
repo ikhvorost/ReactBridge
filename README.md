@@ -32,6 +32,9 @@
 Attach `@ReactModule` macro to your class definition and it exports and registers the native module class with React Native and that will allow you to access its code from JavaScript:
 
 ``` swift
+import React
+import ReactBridge
+
 @ReactModule
 class CalendarModule: NSObject, RCTBridgeModule {
 }
@@ -51,7 +54,7 @@ class CalendarModule: NSObject, RCTBridgeModule {
 > **Note**
 > If you do not specify a name, the JavaScript module name will match the Swift class name.
 
-The native module can then be accessed in JavaScript like this:
+Now the native module can then be accessed in JavaScript like this:
 
 ``` js
 import { NativeModules } from 'react-native';
@@ -135,6 +138,124 @@ Calendar.createEvent('Wedding', 'Las Vegas')
 For more details about Native Modules, see: https://reactnative.dev/docs/native-modules-ios.
 
 ### Native UI Component
+
+To expose a native view you should attach `@ReactView` macro to a subclass of `RCTViewManager` that is also typically the delegate for the view, sending events back to JavaScript via the bridge.
+
+``` swift
+import React
+import ReactBridge
+import MapKit
+
+@ReactView
+class MapView: RCTViewManager {
+
+  override func view() -> UIView {
+    MKMapView()
+  }
+}
+```
+
+Then you need a little bit of JavaScript to make this a usable React component:
+
+``` js
+import {requireNativeComponent} from 'react-native';
+
+const MapView = requireNativeComponent('MapView');
+
+... 
+
+render() {
+  return <MapView style={{flex: 1}} />;
+}
+```
+
+**Properties**
+
+To bridge over some native properties of a native view we can declare properties with the same name on our view manager class and mark them with `@ReactProperty` macro. Let's say we want to be able to disable zooming:
+
+``` swift
+@ReactView
+class MapView: RCTViewManager {
+
+  @ReactProperty
+  var zoomEnabled: Bool?
+
+  override func view() -> UIView {
+    MKMapView()
+  }
+}
+```
+
+> **Note**
+> The target properties of a view must be visible for Objective-C.
+
+Now to actually disable zooming, we set the property in JavaScript:
+
+``` js
+<MapView style={{flex: 1}} zoomEnabled={false} />
+```
+
+For more complex properties you can pass `json` from JavaScript directly to native properties of your view if they are supported or use `isCustom` argument to inform React Native that a custom setter exists on your view manager:
+
+``` swift
+@ReactView
+class MapView: RCTViewManager {
+
+  @ReactProperty
+  var zoomEnabled: Bool?
+  
+  @ReactProperty(isCustom: true)
+  var region: [String : Double]?
+  
+  @objc 
+  func set_region(_ json: [String : Double]?, forView: MKMapView?, withDefaultView: MKMapView?) {
+    guard let latitude = json?["latitude"],
+          let latitudeDelta = json?["latitudeDelta"],
+          let longitude = json?["longitude"],
+          let longitudeDelta = json?["longitudeDelta"]
+    else {
+      return
+    }
+    
+    let region = MKCoordinateRegion(
+      center: CLLocationCoordinate2D(latitude: latitude, longitude: longitude), 
+      span: MKCoordinateSpan(latitudeDelta: latitudeDelta, longitudeDelta: longitudeDelta)
+    )
+    forView?.setRegion(region, animated: true)
+  }
+  
+  override func view() -> UIView {
+    MKMapView()
+  }
+}
+```
+
+> **Note**
+> The custom setter must have the following signature: `@objc func set_NAME(_ json: TYPE?, forView: VIEW_TYPE?, withDefaultView: VIEW_TYPE?)`
+
+JavaScript code with `region` property:
+
+``` js
+<MapView
+  style={{flex: 1}}
+  zoomEnabled={false}
+  region={{
+    latitude: 37.48,
+    longitude: -122.1,
+    latitudeDelta: 0.1,
+    longitudeDelta: 0.1,
+  }}
+/>
+```
+
+**Events**
+
+
+
+
+
+
+For more details about Native UI Components, see: https://reactnative.dev/docs/native-components-ios.
 
 ## Documentation
 
