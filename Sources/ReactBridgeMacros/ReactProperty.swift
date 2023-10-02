@@ -59,10 +59,15 @@ extension ReactProperty: PeerMacro {
       
       let name = "\(item.pattern.trimmed)"
       let objcType = try type.objcType()
-      let keyPath = node.arguments()["keyPath"]?.stringValue
+      
+      let arguments = node.arguments()
+      let isCustom = arguments["isCustom"]?.boolValue == true
+      let keyPath = isCustom
+        ? #""__custom__""#
+        : arguments["keyPath"]?.stringValue ?? #""\#(name)""#
       
       return [
-        propConfig(name: name, objcType: objcType.type(), keyPath: keyPath ?? "\"\(name)\"")
+        propConfig(name: name, objcType: objcType.type(), keyPath: keyPath)
       ]
     }
     catch let diagnostic as Diagnostic {

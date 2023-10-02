@@ -101,4 +101,4 @@ public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBri
 ///   - keyPath: An arbitrary key path in the view to set a value.
 ///
 @attached(peer, names: prefixed(propConfig_))
-public macro ReactProperty(keyPath: String? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactProperty")
+public macro ReactProperty(keyPath: String? = nil, isCustom: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactProperty")

@@ -409,10 +409,10 @@ final class ReactPropertyTests: XCTestCase {
     "ReactProperty": ReactProperty.self,
   ]
   
-  func propConfig(name: String, objcType: String, keyPath: String? = nil) -> String {
+  func propConfig(name: String, objcType: String, keyPath: String? = nil, isCustom: Bool = false) -> String {
     """
     @objc static func propConfig_\(name)() -> [String] {
-        ["\(objcType)", "\(keyPath ?? name)"]
+        ["\(objcType)", "\(isCustom ? "__custom__" : (keyPath ?? name))"]
       }
     """
   }
@@ -569,6 +569,26 @@ final class ReactPropertyTests: XCTestCase {
         var isMute: Bool?
       
         \(propConfig(name: "isMute", objcType: "BOOL", keyPath: "muted"))
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_custom() {
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactProperty(isCustom: true)
+        var alpha: Double?
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        var alpha: Double?
+      
+        \(propConfig(name: "alpha", objcType: "double", isCustom: true))
       }
       """,
       macros: macros
