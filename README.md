@@ -230,7 +230,7 @@ class MapView: RCTViewManager {
 ```
 
 > **Note**
-> The custom setter must have the following signature: `@objc func set_NAME(_ json: TYPE?, forView: VIEW_TYPE?, withDefaultView: VIEW_TYPE?)`
+> The custom setter must have the following signature: `@objc func set_Name(_ value: Type, forView: ViewType?, withDefaultView: ViewType?)`
 
 JavaScript code with `region` property:
 
@@ -254,6 +254,10 @@ To deal with events from the user like changing the visible region we can map in
 Lets add new `onRegionChange` property to a subclass of MKMapView:
 
 ``` swift
+class NativeMapView: MKMapView {
+  @objc var onRegionChange: RCTBubblingEventBlock?
+}
+
 @ReactView
 class MapView: RCTViewManager {
   
@@ -282,10 +286,6 @@ extension MapView: MKMapViewDelegate {
       "longitudeDelta": region.span.longitudeDelta,
     ])
   }
-}
-
-class NativeMapView: MKMapView {
-  @objc var onRegionChange: RCTBubblingEventBlock?
 }
 ```
 
@@ -318,13 +318,57 @@ For more details about Native UI Components, see: https://reactnative.dev/docs/n
 
 ## Documentation
 
-### @ReactModule
+### `@ReactModule`
 
-### @ReactMethod
+The macro exports and registers a class as a native module for React Native.
 
-### @ReactView
+``` swift
+@ReactModule(jsName: String? = nil, requiresMainQueueSetup: Bool = false, methodQueue: DispatchQueue? = nil)
+```
 
-### @ReactProperty
+**Parameters**
+
+- **jsName**: JavaScript module name. If omitted, the JavaScript module name will match the class name.
+- **requiresMainQueueSetup**: Let React Native know if your module needs to be initialized on the main queue, before any JavaScript code executes. If value is `false` an class initializer will be called on a global queue. Defaults to `false`.
+- **methodQueue**: The queue that will be used to call all exported methods. By default exported methods will call on a global queue.
+
+### `@ReactMethod`
+
+The macro exposes a method of a native module to JavaScript.
+
+``` swift
+@ReactMethod(jsName: String? = nil, isSync: Bool = false)
+```
+
+**Parameters**
+- **jsName**: JavaScript method name. If omitted, the JavaScript method name will match the method name.
+- **isSync**: Calling the method asynchronously or synchronously. If value is `true` the method is called from JavaScript synchronously on the JavaScript thread. Defaults to `false`.
+
+> **Note**
+> If you choose to use a method synchronously, your app can no longer use the Google Chrome debugger. This is because synchronous methods require the JS VM to share memory with the app. For the Google Chrome debugger, React Native runs inside the JS VM in Google Chrome, and communicates asynchronously with the mobile devices via WebSockets.
+
+### `@ReactView`
+
+The macro exports and registers a class as a native UI component for React Native.
+
+``` swift
+@ReactView(jsName: String? = nil)
+```
+
+**Parameters**
+- **jsName**: JavaScript UI component name. If omitted, the JavaScript UI component name will match the class name.
+
+### `@ReactProperty`
+
+The macro exports a property of a native view to JavaScript.
+
+``` swift
+@ReactProperty(keyPath: String? = nil, isCustom: Bool = false)
+```
+
+**Parameters**
+- **keyPath**: An arbitrary key path in the view to set a value.
+- **isCustom**: Handling a property with a custom setter `@objc func set_Name(_ value: Type, forView: ViewType?, withDefaultView: ViewType?)` on a native UI component. Defaults to `false`.
 
 ## Requirements
 
