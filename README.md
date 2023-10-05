@@ -163,7 +163,6 @@ import {requireNativeComponent} from 'react-native';
 const MapView = requireNativeComponent('MapView');
 
 ... 
-
 render() {
   return <MapView style={{flex: 1}} />;
 }
@@ -195,7 +194,7 @@ Now to actually disable zooming, we set the property in JavaScript:
 <MapView style={{flex: 1}} zoomEnabled={false} />
 ```
 
-For more complex properties you can pass `json` from JavaScript directly to native properties of your view if they are supported or use `isCustom` argument to inform React Native that a custom setter exists on your view manager:
+For more complex properties you can pass `json` from JavaScript directly to native properties of your view (if they are implemented) or use `isCustom` argument to inform React Native that a custom setter is on your view manager:
 
 ``` swift
 @ReactView
@@ -250,8 +249,68 @@ JavaScript code with `region` property:
 
 **Events**
 
+To deal with events from the user like changing the visible region we can map input event handlers from JavaScript to native view properties with `RCTBubblingEventBlock` type.
 
+Lets add new `onRegionChange` property to a subclass of MKMapView:
 
+``` swift
+@ReactView
+class MapView: RCTViewManager {
+  
+  @ReactProperty
+  var onRegionChange: RCTBubblingEventBlock?
+  
+  override func view() -> UIView {
+    let mapView = NativeMapView()
+    mapView.delegate = self
+    return mapView
+  }
+}
+
+extension MapView: MKMapViewDelegate {
+  
+  func mapView(_ mapView: MKMapView, regionDidChangeAnimated animated: Bool) {
+    guard let mapView = mapView as? NativeMapView else {
+      return
+    }
+    
+    let region = mapView.region
+    mapView.onRegionChange?([
+      "latitude": region.center.latitude,
+      "longitude": region.center.longitude,
+      "latitudeDelta": region.span.latitudeDelta,
+      "longitudeDelta": region.span.longitudeDelta,
+    ])
+  }
+}
+
+class NativeMapView: MKMapView {
+  @objc var onRegionChange: RCTBubblingEventBlock?
+}
+```
+
+> **Note**
+> All properties with `RCTBubblingEventBlock` must be prefixed with `on` and marked with `@objc`.
+
+Calling the `onRegionChange` event handler property results in calling the same callback property in JavaScript:
+
+``` js
+function App(): JSX.Element {
+  ...
+
+  this.onRegionChange = event => {
+    const region = event.nativeEvent;
+    console.log(region.latitude)
+  };
+
+  return (
+    <MapView
+      style={{flex: 1}}
+      onRegionChange={this.onRegionChange}
+    />
+  );
+}
+```
 
 
 
