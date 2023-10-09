@@ -21,4 +21,7 @@ jobs:
       run: |
         swift test --enable-code-coverage -v
         xcrun llvm-cov export -format="lcov" .build/debug/ReactBridgePackageTests.xctest/contents/macos/ReactBridgePackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests' > info.lcov
-        bash <(curl -s https://codecov.io/bash)
+    - name: Codecov
+      uses: codecov/codecov-action@v3
+      env:
+        CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

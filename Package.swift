@@ -28,9 +28,7 @@ let package = Package(
       name: "ReactBridge",
       dependencies: ["ReactBridgeMacros", "RegisterModules"]
     ),
-    .target(
-      name: "RegisterModules",
-      publicHeadersPath: "headers"),
+    .target(name: "RegisterModules"),
     .testTarget(
       name: "ReactBridgeTests",
       dependencies: ["ReactBridgeMacros", "ReactBridge", .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")]
