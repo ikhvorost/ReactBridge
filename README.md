@@ -5,7 +5,7 @@
 [![SwiftPM compatible](https://img.shields.io/badge/SwiftPM-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
 ![Platforms: iOS, macOS, tvOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat&logo=apple)
 [![Build](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml/badge.svg)](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml)
-[![Codecov](https://codecov.io/gh/ikhvorost/ReactBridge/branch/main/graph/badge.svg?token=26NymxLQyB)](https://codecov.io/gh/ikhvorost/ReactBridge)
+[![codecov](https://codecov.io/gh/ikhvorost/ReactBridge/graph/badge.svg?token=0MNGNA5W90)](https://codecov.io/gh/ikhvorost/ReactBridge)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
