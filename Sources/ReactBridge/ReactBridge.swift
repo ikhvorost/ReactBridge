@@ -36,8 +36,8 @@ import Foundation
 ///
 /// - Parameters:
 ///   - jsName: JavaScript module name. If omitted, the JavaScript module name will match the class name.
-///   - requiresMainQueueSetup: Let React Native know if your module needs to be initialized on the main thread, before any JavaScript code executes. If value is `false` an class initializer will be called from any thread. Defaults to `false`.
-///   - methodQueue: The queue that will be used to call all exported methods. If value is `false ` exported methods will call on a default background queue. Defaults to `false`.
+///   - requiresMainQueueSetup: Let React Native know if your module needs to be initialized on the main queue, before any JavaScript code executes. If value is `false` an class initializer will be called on a global queue. Defaults to `false`.
+///   - methodQueue: The queue that will be used to call all exported methods. By default exported methods will call on a global queue.
 ///
 @attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
 public macro ReactModule(
@@ -64,9 +64,9 @@ public macro ReactModule(
 @attached(peer, names: prefixed(__rct_export__))
 public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactMethod")
 
-/// The macro exports and registers a class as a native view manager for React Native.
+/// The macro exports and registers a class as a native UI component for React Native.
 ///
-/// Attach this macro to your class definition to automatically register your native view with the bridge when it loads.
+/// Attach this macro to your class definition to automatically register your native UI component with the bridge when it loads.
 ///
 ///     @ReactView
 ///     class MapView: RCTViewManager {
@@ -77,7 +77,7 @@ public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externa
 ///     }
 ///
 /// - Parameters:
-///   - jsName: JavaScript module name. If omitted, the JavaScript module name will match the class name.
+///   - jsName: JavaScript UI component name. If omitted, the JavaScript UI component name will match the class name.
 ///
 @attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup))
 public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactView")
@@ -99,6 +99,7 @@ public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBri
 ///
 /// - Parameters:
 ///   - keyPath: An arbitrary key path in the view to set a value.
+///   - isCustom: Handling a property with a custom setter `@objc func set_Name(_ value: Type, forView: ViewType?, withDefaultView: ViewType?)` on a native UI component. Defaults to `false`.
 ///
 @attached(peer, names: prefixed(propConfig_))
 public macro ReactProperty(keyPath: String? = nil, isCustom: Bool = false) = #externalMacro(module: "ReactBridgeMacros", type: "ReactProperty")
