@@ -30,7 +30,7 @@ jobs:
     - name: Run tests
       run: |
         swift test --enable-code-coverage
-        xcrun llvm-cov export -format="lcov" .build/debug/ReactBridgePackageTests.xctest/contents/macos/ReactBridgePackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests$' -ignore-filename-regex='ReactBridgeMacros.swift' > info.lcov
+        xcrun llvm-cov export -format="lcov" .build/debug/ReactBridgePackageTests.xctest/contents/macos/ReactBridgePackageTests -instr-profile .build/debug/codecov/default.profdata -ignore-filename-regex='Tests.swift' -ignore-filename-regex='ReactBridgeMacros.swift' > info.lcov
     
     - name: Codecov
       uses: codecov/codecov-action@v3
