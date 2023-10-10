@@ -14,6 +14,7 @@ protocol RCTBridgeModule {
 class RCTViewManager: NSObject {
   class func moduleName() -> String! { "" }
   class func requiresMainQueueSetup() -> Bool { false }
+  var methodQueue: DispatchQueue { .main }
 }
 
 class RCTMethodInfo: NSObject {

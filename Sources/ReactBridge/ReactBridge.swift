@@ -79,7 +79,7 @@ public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externa
 /// - Parameters:
 ///   - jsName: JavaScript UI component name. If omitted, the JavaScript UI component name will match the class name.
 ///
-@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup))
+@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
 public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactView")
 
 /// The macro exports a property of a native view to JavaScript.

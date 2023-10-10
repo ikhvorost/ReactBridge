@@ -58,6 +58,7 @@ extension ReactView: MemberMacro {
         ReactModule.registerModule,
         ReactModule.moduleName(name: jsName, override: true),
         ReactModule.requiresMainQueueSetup(value: true, override: true),
+        ReactModule.methodQueue(queue: ".main", override: true)
       ]
     }
     catch let diagnostic as Diagnostic {

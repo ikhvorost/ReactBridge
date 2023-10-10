@@ -643,6 +643,10 @@ final class ReactViewTests: XCTestCase {
           @objc override class func requiresMainQueueSetup() -> Bool {
             true
           }
+      
+          @objc override var methodQueue: DispatchQueue {
+            .main
+          }
       }
       """,
       macros: macros
@@ -670,6 +674,10 @@ final class ReactViewTests: XCTestCase {
       
           @objc override class func requiresMainQueueSetup() -> Bool {
             true
+          }
+      
+          @objc override var methodQueue: DispatchQueue {
+            .main
           }
       }
       """,
