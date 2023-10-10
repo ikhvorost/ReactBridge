@@ -14,11 +14,9 @@ final class ReactMethodTests: XCTestCase {
     """
     @objc static func __rct_export__\(name)() -> UnsafePointer<RCTMethodInfo>? {
         struct Static {
-          static var methodInfo = RCTMethodInfo(
-            jsName: NSString(string: "\(jsName ?? name)").utf8String,
-            objcName: NSString(string: "\(selector)").utf8String,
-            isSync: \(isSync)
-          )
+          static let jsName = NSString(string: "\(jsName ?? name)")
+          static let objcName = NSString(string: "\(selector)")
+          static var methodInfo = RCTMethodInfo(jsName: jsName.utf8String, objcName: objcName.utf8String, isSync: \(isSync))
         }
         return withUnsafePointer(to: &Static.methodInfo) {
             $0
