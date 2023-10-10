@@ -30,7 +30,10 @@ import SwiftDiagnostics
 extension TypeSyntax {
   
   func objcType() throws -> ObjcType {
-    if let identifier = self.as(IdentifierTypeSyntax.self) {
+    if let attributed = self.as(AttributedTypeSyntax.self) {
+      return try attributed.baseType.objcType()
+    }
+    else if let identifier = self.as(IdentifierTypeSyntax.self) {
       let swiftType = "\(identifier.name.trimmed)"
       
       // Generic

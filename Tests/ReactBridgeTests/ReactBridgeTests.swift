@@ -116,6 +116,10 @@ final class ReactMethodTests: XCTestCase {
         @ReactMethod
         @objc
         func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
+      
+        @ReactMethod
+        @objc
+        func getItems(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
       }
       """,
       expandedSource:
@@ -165,6 +169,10 @@ final class ReactMethodTests: XCTestCase {
         func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
       
         \(rct_export(name: "test11", selector: "test11WithPoint:(CGPoint)point array:(NSArray<NSNumber *> * _Nonnull)array dict:(NSDictionary * _Nonnull)dict set:(NSSet * _Nonnull)set"))
+        @objc
+        func getItems(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
+      
+        \(rct_export(name: "getItems", selector: "getItemsWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject"))
       }
       """,
       macros: macros

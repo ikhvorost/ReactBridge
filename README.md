@@ -41,6 +41,7 @@ class CalendarModule: NSObject, RCTBridgeModule {
 ```
 
 > **Note**
+> `ReactBridge` requires to import `React` library.
 > Swift class must be inherited from `NSObject` and must conform to `RCTBridgeModule` protocol.
 
 The `@ReactModule` macro also takes optional `jsName` argument that specifies the name that will be accessible as in your JavaScript code:
@@ -383,7 +384,12 @@ The macro exports a property of a native view to JavaScript.
 1. Select `File > Add Package Dependencies...`. (Note: The menu options may vary depending on the version of Xcode being used.)
 2. Enter the URL for the the package repository: `https://github.com/ikhvorost/ReactBridge.git`
 3. Input a specific version or a range of versions for `Dependency Rule` and a need target for `Add to Project`.
-4. Import the package in your source files: `import ReactBridge`.
+4. Import the package in your source files: 
+```
+import React
+import ReactBridge
+...
+```
 
 ### Swift Package
 

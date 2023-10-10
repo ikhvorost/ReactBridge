@@ -1,6 +1,8 @@
 import Foundation
 
 typealias RCTBubblingEventBlock = ([String : Any]) -> Void
+typealias RCTPromiseResolveBlock = (Any) -> Void
+typealias RCTPromiseRejectBlock = (String, String, NSError) -> Void
 
 func RCTRegisterModule(_ cls: AnyClass) {
   print(#function, cls)
