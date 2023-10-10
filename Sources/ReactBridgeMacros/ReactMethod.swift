@@ -37,9 +37,9 @@ extension ReactMethod: PeerMacro {
     """
     @objc static func __rct_export__\(raw: funcName)() -> UnsafePointer<RCTMethodInfo>? {
       struct Static {
-        static let jsName = NSString(string: \(raw: jsName))
-        static let objcName = NSString(string: "\(raw: objcName)")
-        static var methodInfo = RCTMethodInfo(jsName: jsName.utf8String, objcName: objcName.utf8String, isSync: \(raw: isSync))
+        static let jsName = strdup(\(raw: jsName))
+        static let objcName = strdup("\(raw: objcName)")
+        static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(raw: isSync))
       }
       return withUnsafePointer(to: &Static.methodInfo) { $0 }
     }
