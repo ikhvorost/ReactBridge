@@ -1,28 +1,8 @@
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
 @testable import ReactBridgeMacros
 
-//*
-import ReactBridge
-
-@ReactModule
-class Calendar: NSObject, RCTBridgeModule {
-
-  @ReactMethod
-  @objc func createCalendarEvent(name: String, location: String) {
-  }
-}
-
-@ReactView()
-class MapManager: RCTViewManager {
-  
-  @ReactProperty()
-  var zoomEnabled: Bool?
-}
-
-// */
 
 final class ReactMethodTests: XCTestCase {
   

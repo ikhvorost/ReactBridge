@@ -43,7 +43,7 @@ class CalendarModule: NSObject, RCTBridgeModule {
 > **Note**
 > Swift class must be inherited from `NSObject` and must conform to `RCTBridgeModule` protocol.
 
-The `@ReactModule` macro also takes optional `jsName` argument that specifies the name that the module will be accessible as in your JavaScript code:
+The `@ReactModule` macro also takes optional `jsName` argument that specifies the name that will be accessible as in your JavaScript code:
 
 ``` swift
 @ReactModule(jsName: "Calendar")
@@ -79,7 +79,7 @@ class CalendarModule: NSObject, RCTBridgeModule {
 > **Note**
 > The exported method must be marked with `@objc` attribute.
 
-Now that you have the `CalendarModule` native module available, you can invoke your native method `createEvent()`:
+Now that you have the native module available, you can invoke your native method `createEvent()`:
 
 ``` js
 Calendar.createEvent('Wedding', 'Las Vegas');
@@ -87,7 +87,7 @@ Calendar.createEvent('Wedding', 'Las Vegas');
 
 **Callbacks**
 
-Methods marked with `@ReactMethod` macro are asynchronous by default but if it's needed to to pass data from Swift to JavaScript you can use the callback parameter with type `RCTResponseSenderBlock`: 
+Methods marked with `@ReactMethod` macro are asynchronous by default but if it's needed to pass data from Swift to JavaScript you can use the callback parameter with `RCTResponseSenderBlock` type:
 
 ``` swift
 @ReactMethod
@@ -108,7 +108,7 @@ Calendar.createEvent('Wedding', 'Las Vegas', eventId => {
 
 **Promises**
 
-Native modules can also fulfill a promise, which can simplify your JavaScript, especially when using async/await syntax:
+Native modules can also fulfill promises, which can simplify your JavaScript, especially when using async/await syntax:
 
 ``` swift
 @ReactMethod
@@ -123,7 +123,7 @@ Native modules can also fulfill a promise, which can simplify your JavaScript, e
 }
 ```
 
-The JavaScript counterpart of this method returns a Promise:
+The JavaScript counterpart of this method returns a promise:
 
 ``` js
 Calendar.createEvent('Wedding', 'Las Vegas')
@@ -194,7 +194,7 @@ Now to actually disable zooming, we set the property in JavaScript:
 <MapView style={{flex: 1}} zoomEnabled={false} />
 ```
 
-For more complex properties you can pass `json` from JavaScript directly to native properties of your view (if they are implemented) or use `isCustom` argument to inform React Native that a custom setter is on your view manager:
+For more complex properties you can pass `json` from JavaScript directly to native properties of your view (if they are implemented) or use `isCustom` argument to inform React Native that a custom setter is implemented on your view manager:
 
 ``` swift
 @ReactView
