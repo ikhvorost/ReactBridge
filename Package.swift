@@ -29,7 +29,7 @@ import CompilerPluginSupport
 
 let package = Package(
   name: "ReactBridge",
-  platforms: [.macOS(.v10_15), .iOS(.v13), .tvOS(.v13), .watchOS(.v6), .macCatalyst(.v13)],
+  platforms: [.macOS(.v10_15), .iOS(.v12), .tvOS(.v12), .watchOS(.v4), .macCatalyst(.v13)],
   products: [
     .library(
       name: "ReactBridge",
@@ -56,5 +56,6 @@ let package = Package(
       name: "ReactBridgeTests",
       dependencies: ["ReactBridgeMacros", "ReactBridge", .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")]
     ),
-  ]
+  ],
+  swiftLanguageVersions: [.v5]
 )
