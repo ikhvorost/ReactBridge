@@ -27,6 +27,12 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
+fileprivate extension String {
+  var uppercasedFirst: String {
+    prefix(1).uppercased() + dropFirst()
+  }
+}
+
 
 struct ReactMethod {
 }
@@ -57,11 +63,11 @@ extension ReactMethod: PeerMacro {
       if param == parameterList.first {
         if firstName != "_" {
           if param.secondName == nil {
-            selector += "With\(firstName.capitalized):(\(objcType))\(firstName)"
+            selector += "With\(firstName.uppercasedFirst):(\(objcType))\(firstName)"
             continue
           }
           else {
-            firstName = firstName.capitalized
+            firstName = firstName.uppercasedFirst
           }
         }
       }
