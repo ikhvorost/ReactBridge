@@ -50,8 +50,7 @@ fileprivate let numberMap: [String : [String]] = [
   "NSUInteger": ["UInt", "UInt8", "UInt16", "UInt32", "UInt64"],
   "float": ["Float"],
   "CGFloat": [],
-  "double": ["Double"],
-  "NSTimeInterval": ["TimeInterval"],
+  "double": ["Double", "TimeInterval"],
 ]
 
 fileprivate let structMap: [String : [String]] = [

@@ -73,104 +73,134 @@ final class ReactMethodTests: XCTestCase {
       class A {
         @ReactMethod
         @objc
-        func test1(count: Int) {}
+        func test(count: Int) {}
       
         @ReactMethod
         @objc
-        func test2(_ count: Int) {}
+        func test(_ count: Int) {}
       
         @ReactMethod
         @objc
-        func test3(in count: Int) {}
+        func test(in count: Int) {}
       
         @ReactMethod
         @objc
-        func test4(in _: Int) {}
+        func test(in _: Int) {}
       
         @ReactMethod
         @objc
-        func test5(_: Int) {}
+        func test(_: Int) {}
       
         @ReactMethod
         @objc
-        func test6(_: Int, text: String) {}
+        func test(_: Int, text: String) {}
       
         @ReactMethod
         @objc
-        func test7(_: Int, _ text: String) {}
+        func test(_: Int, _ text: String) {}
       
         @ReactMethod
         @objc
-        func test8(_: Int, text _: String) {}
+        func test(_: Int, text _: String) {}
       
         @ReactMethod
         @objc
-        func test9(_: Int, _: String) {}
+        func test(_: Int, _: String) {}
       
         @ReactMethod
         @objc
-        func test10(_ text: String?) {}
+        func test(_ text: String?) {}
       
         @ReactMethod
         @objc
-        func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
+        func test(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
       
         @ReactMethod
         @objc
-        func getItems(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
+        func test(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
+      
+        @ReactMethod
+        @objc
+        func test(countOfItems: Int) {}
       }
       """,
       expandedSource:
       """
       class A {
         @objc
-        func test1(count: Int) {}
+        func test(count: Int) {}
       
-        \(rct_export(name: "test1", selector: "test1WithCount:(NSInteger)count"))
+        \(rct_export(name: "test", selector: "testWithCount:(NSInteger)count"))
         @objc
-        func test2(_ count: Int) {}
+        func test(_ count: Int) {}
       
-        \(rct_export(name: "test2", selector: "test2:(NSInteger)count"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)count"))
         @objc
-        func test3(in count: Int) {}
+        func test(in count: Int) {}
       
-        \(rct_export(name: "test3", selector: "test3In:(NSInteger)count"))
+        \(rct_export(name: "test", selector: "testIn:(NSInteger)count"))
         @objc
-        func test4(in _: Int) {}
+        func test(in _: Int) {}
       
-        \(rct_export(name: "test4", selector: "test4In:(NSInteger)_"))
+        \(rct_export(name: "test", selector: "testIn:(NSInteger)_"))
         @objc
-        func test5(_: Int) {}
+        func test(_: Int) {}
       
-        \(rct_export(name: "test5", selector: "test5:(NSInteger)_"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)_"))
         @objc
-        func test6(_: Int, text: String) {}
+        func test(_: Int, text: String) {}
       
-        \(rct_export(name: "test6", selector: "test6:(NSInteger)_ text:(NSString * _Nonnull)text"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)_ text:(NSString * _Nonnull)text"))
         @objc
-        func test7(_: Int, _ text: String) {}
+        func test(_: Int, _ text: String) {}
       
-        \(rct_export(name: "test7", selector: "test7:(NSInteger)_ :(NSString * _Nonnull)text"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)_ :(NSString * _Nonnull)text"))
         @objc
-        func test8(_: Int, text _: String) {}
+        func test(_: Int, text _: String) {}
       
-        \(rct_export(name: "test8", selector: "test8:(NSInteger)_ text:(NSString * _Nonnull)_"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)_ text:(NSString * _Nonnull)_"))
         @objc
-        func test9(_: Int, _: String) {}
+        func test(_: Int, _: String) {}
       
-        \(rct_export(name: "test9", selector: "test9:(NSInteger)_ :(NSString * _Nonnull)_"))
+        \(rct_export(name: "test", selector: "test:(NSInteger)_ :(NSString * _Nonnull)_"))
         @objc
-        func test10(_ text: String?) {}
+        func test(_ text: String?) {}
       
-        \(rct_export(name: "test10", selector: "test10:(NSString * _Nullable)text"))
+        \(rct_export(name: "test", selector: "test:(NSString * _Nullable)text"))
         @objc
-        func test11(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
+        func test(point: CGPoint, array: [Int], dict: [String : Int], set: Set<Int>) {}
       
-        \(rct_export(name: "test11", selector: "test11WithPoint:(CGPoint)point array:(NSArray<NSNumber *> * _Nonnull)array dict:(NSDictionary * _Nonnull)dict set:(NSSet * _Nonnull)set"))
+        \(rct_export(name: "test", selector: "testWithPoint:(CGPoint)point array:(NSArray<NSNumber *> * _Nonnull)array dict:(NSDictionary * _Nonnull)dict set:(NSSet * _Nonnull)set"))
         @objc
-        func getItems(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
+        func test(resolve: @escaping RCTPromiseResolveBlock, reject: RCTPromiseRejectBlock) {}
       
-        \(rct_export(name: "getItems", selector: "getItemsWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject"))
+        \(rct_export(name: "test", selector: "testWithResolve:(RCTPromiseResolveBlock)resolve reject:(RCTPromiseRejectBlock)reject"))
+        @objc
+        func test(countOfItems: Int) {}
+      
+        \(rct_export(name: "test", selector: "testWithCountOfItems:(NSInteger)countOfItems"))
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_timeInterval() {
+    assertMacroExpansion(
+      """
+      class A {
+        @ReactMethod
+        @objc
+        func test(start: TimeInterval) {}
+      }
+      """,
+      expandedSource:
+      """
+      class A {
+        @objc
+        func test(start: TimeInterval) {}
+      
+        \(rct_export(name: "test", selector: "testWithStart:(double)start"))
       }
       """,
       macros: macros
