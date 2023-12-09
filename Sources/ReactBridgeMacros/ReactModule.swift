@@ -78,29 +78,33 @@ extension ReactModule: MemberMacro {
       
       let className = "\(classDecl.name.trimmed)"
       
-      // Error: NSObject
-      guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
-        throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
-      }
-      
-      // Error: RCTBridgeModule
-      guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
-        throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
+      let isEventEmitter = classDecl.inheritanceClause?.description.contains("RCTEventEmitter") == true
+      if !isEventEmitter {
+        // Error: NSObject
+        guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+          throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
+        }
+        
+        // Error: RCTBridgeModule
+        guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
+          throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
+        }
       }
       
       let arguments = node.arguments()
       
       let jsName = arguments["jsName"]?.stringValue ?? "\"\(className)\""
       let mainQueueSetup = arguments["requiresMainQueueSetup"]?.boolValue == true
-      
+      let withOverride = isEventEmitter == true
+        
       var items: [DeclSyntax] = [
-        moduleName(name: jsName),
-        requiresMainQueueSetup(value: mainQueueSetup),
+        moduleName(name: jsName, override: withOverride),
+        requiresMainQueueSetup(value: mainQueueSetup, override: withOverride),
         registerModule
       ]
       
       if let queue = arguments["methodQueue"]?.stringValue {
-        items.append(methodQueue(queue: queue))
+        items.append(methodQueue(queue: queue, override: withOverride))
       }
       
       return items
