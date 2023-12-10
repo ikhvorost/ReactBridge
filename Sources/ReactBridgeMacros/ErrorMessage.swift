@@ -54,29 +54,32 @@ enum ErrorMessage: DiagnosticMessage {
   }
   
   var message: String {
-    switch self {
+    let message = switch self {
+      // Errors
       case .funcOnly(let macroName):
-        return "@\(macroName) can only be applied to a func"
+        "@\(macroName) can only be applied to a func"
       case .classOnly(let macroName):
-        return "@\(macroName) can only be applied to a class"
+        "@\(macroName) can only be applied to a class"
       case .varOnly(let macroName):
-        return "@\(macroName) can only be applied to a var"
+        "@\(macroName) can only be applied to a var"
       case .varSingleOnly(let macroName):
-        return "@\(macroName) can only be applied to a single var"
+        "@\(macroName) can only be applied to a single var"
       case .objcOnly(let name):
-        return "'\(name)' must be marked with '@objc'"
+        "'\(name)' must be marked with '@objc'"
       case .mustInherit(let className, let superclassName):
-        return "'\(className)' must inherit '\(superclassName)'"
+        "'\(className)' must inherit '\(superclassName)'"
       case .mustConform(let className, let protocolName):
-        return "'\(className)' must conform '\(protocolName)'"
+        "'\(className)' must conform '\(protocolName)'"
       case .mustBeClass:
-        return "Return type must be any class type or 'Any'"
+        "Return type must be any class type or 'Any'"
       case .unsupportedType(let typeName):
-        return "'\(typeName)' type is not supported"
+        "'\(typeName)' type is not supported"
         
+      // Warnings
       case .nonSync:
-        return "Functions with a defined return type should be synchronous"
+        "Functions with a defined return type should be synchronous"
     }
+    return "ReactBridge: \(message)"
   }
   
   var diagnosticID: MessageID {

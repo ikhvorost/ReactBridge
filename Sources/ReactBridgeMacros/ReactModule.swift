@@ -78,14 +78,18 @@ extension ReactModule: MemberMacro {
       
       let className = "\(classDecl.name.trimmed)"
       
-      // Error: NSObject
-      guard classDecl.inheritanceClause?.description.contains("NSObject") == true else {
+      guard let inheritance = classDecl.inheritanceClause?.description else {
         throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustInherit(className: className, superclassName: "NSObject"))
       }
       
-      // Error: RCTBridgeModule
-      guard classDecl.inheritanceClause?.description.contains("RCTBridgeModule") == true else {
-        throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
+      var override = false
+      if inheritance.contains("NSObject") {
+        if inheritance.contains("RCTBridgeModule") == false {
+          throw Diagnostic(node: classDecl.name, message: ErrorMessage.mustConform(className: className, protocolName: "RCTBridgeModule"))
+        }
+      }
+      else {
+        override = true
       }
       
       let arguments = node.arguments()
@@ -94,8 +98,8 @@ extension ReactModule: MemberMacro {
       let mainQueueSetup = arguments["requiresMainQueueSetup"]?.boolValue == true
       
       var items: [DeclSyntax] = [
-        moduleName(name: jsName),
-        requiresMainQueueSetup(value: mainQueueSetup),
+        moduleName(name: jsName, override: override),
+        requiresMainQueueSetup(value: mainQueueSetup, override: override),
         registerModule
       ]
       

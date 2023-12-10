@@ -308,17 +308,34 @@ final class ReactModuleTests: XCTestCase {
     "ReactModule": ReactModule.self
   ]
   
+  func methods(name: String, requiresMainQueueSetup: Bool = false, override: Bool = false) -> String {
+    """
+    
+        @objc \(override ? "override " : "")class func moduleName() -> String! {
+          "\(name)"
+        }
+
+        @objc \(override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
+          \(requiresMainQueueSetup)
+        }
+
+        @objc static func _registerModule() {
+          RCTRegisterModule(self);
+        }
+    """
+  }
+  
   func test_struct() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.classOnly(macroName: "ReactModule").message, line: 1, column: 1)
         
     assertMacroExpansion(
       """
       @ReactModule
-      struct A {}
+      struct Module {}
       """,
       expandedSource:
       """
-      struct A {}
+      struct Module {}
       """,
       diagnostics: [diagnostic],
       macros: macros
@@ -326,16 +343,16 @@ final class ReactModuleTests: XCTestCase {
   }
   
   func test_NSObject() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "A", superclassName: "NSObject").message, line: 2, column: 7)
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "Module", superclassName: "NSObject").message, line: 2, column: 7)
     
     assertMacroExpansion(
       """
       @ReactModule
-      class A {}
+      class Module {}
       """,
       expandedSource:
       """
-      class A {}
+      class Module {}
       """,
       diagnostics: [diagnostic],
       macros: macros
@@ -343,16 +360,16 @@ final class ReactModuleTests: XCTestCase {
   }
   
   func test_RCTBridgeModule() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustConform(className: "A", protocolName: "RCTBridgeModule").message, line: 2, column: 7)
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustConform(className: "Module", protocolName: "RCTBridgeModule").message, line: 2, column: 7)
     
     assertMacroExpansion(
       """
       @ReactModule
-      class A: NSObject {}
+      class Module: NSObject {}
       """,
       expandedSource:
       """
-      class A: NSObject {}
+      class Module: NSObject {}
       """,
       diagnostics: [diagnostic],
       macros: macros
@@ -363,24 +380,30 @@ final class ReactModuleTests: XCTestCase {
     assertMacroExpansion(
       """
       @ReactModule
-      class A: NSObject, RCTBridgeModule {
+      class Module: NSObject, RCTBridgeModule {
       }
       """,
       expandedSource:
       """
-      class A: NSObject, RCTBridgeModule {
-      
-          @objc class func moduleName() -> String! {
-            "A"
-          }
-      
-          @objc class func requiresMainQueueSetup() -> Bool {
-            false
-          }
-      
-          @objc static func _registerModule() {
-            RCTRegisterModule(self);
-          }
+      class Module: NSObject, RCTBridgeModule {
+      \(methods(name: "Module"))
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_RCTEventEmitter() {
+    assertMacroExpansion(
+      """
+      @ReactModule
+      class Module: RCTEventEmitter {
+      }
+      """,
+      expandedSource:
+      """
+      class Module: RCTEventEmitter {
+      \(methods(name: "Module", override: true))
       }
       """,
       macros: macros
@@ -390,25 +413,14 @@ final class ReactModuleTests: XCTestCase {
   func test_params() {
     assertMacroExpansion(
       """
-      @ReactModule(jsName: "ModuleA", requiresMainQueueSetup: true, methodQueue: .main)
+      @ReactModule(jsName: "Module2", requiresMainQueueSetup: true, methodQueue: .main)
       class A: NSObject, RCTBridgeModule {
       }
       """,
       expandedSource:
       """
       class A: NSObject, RCTBridgeModule {
-      
-          @objc class func moduleName() -> String! {
-            "ModuleA"
-          }
-      
-          @objc class func requiresMainQueueSetup() -> Bool {
-            true
-          }
-      
-          @objc static func _registerModule() {
-            RCTRegisterModule(self);
-          }
+      \(methods(name: "Module2", requiresMainQueueSetup: true))
       
           @objc var methodQueue: DispatchQueue {
             .main
@@ -617,6 +629,27 @@ final class ReactViewTests: XCTestCase {
     "ReactView": ReactView.self,
   ]
   
+  func methods(name: String) -> String {
+    """
+    
+        @objc static func _registerModule() {
+          RCTRegisterModule(self);
+        }
+
+        @objc override class func moduleName() -> String! {
+          "\(name)"
+        }
+
+        @objc override class func requiresMainQueueSetup() -> Bool {
+          true
+        }
+
+        @objc override var methodQueue: DispatchQueue {
+          .main
+        }
+    """
+  }
+  
   func test_struct() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.classOnly(macroName: "ReactView").message, line: 1, column: 1)
     
@@ -635,7 +668,7 @@ final class ReactViewTests: XCTestCase {
   }
   
   func test_RCTViewManager() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "View", superclassName: "RCTViewManager").message, line: 2, column: 7)
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.mustInherit(className: "View", superclassName: "RCTViewManager").message, line: 2, column: 7, severity: .error)
     
     assertMacroExpansion(
       """
@@ -661,22 +694,24 @@ final class ReactViewTests: XCTestCase {
       expandedSource:
       """
       class View: RCTViewManager {
-      
-          @objc static func _registerModule() {
-            RCTRegisterModule(self);
-          }
-      
-          @objc override class func moduleName() -> String! {
-            "View"
-          }
-      
-          @objc override class func requiresMainQueueSetup() -> Bool {
-            true
-          }
-      
-          @objc override var methodQueue: DispatchQueue {
-            .main
-          }
+      \(methods(name: "View"))
+      }
+      """,
+      macros: macros
+    )
+  }
+  
+  func test_RNCWebViewManager() {
+    assertMacroExpansion(
+      """
+      @ReactView
+      class View: RNCWebViewManager {
+      }
+      """,
+      expandedSource:
+      """
+      class View: RNCWebViewManager {
+      \(methods(name: "View"))
       }
       """,
       macros: macros
@@ -693,22 +728,7 @@ final class ReactViewTests: XCTestCase {
       expandedSource:
       """
       class View: RCTViewManager {
-      
-          @objc static func _registerModule() {
-            RCTRegisterModule(self);
-          }
-      
-          @objc override class func moduleName() -> String! {
-            "MyView"
-          }
-      
-          @objc override class func requiresMainQueueSetup() -> Bool {
-            true
-          }
-      
-          @objc override var methodQueue: DispatchQueue {
-            .main
-          }
+      \(methods(name: "MyView"))
       }
       """,
       macros: macros
