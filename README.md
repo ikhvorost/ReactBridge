@@ -9,7 +9,7 @@
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
-`ReactBridge` provides Swift macros to expose Native Modules with their methods and Native UI Components to JavaScript.
+`ReactBridge` provides Swift macros for React Native to expose Native Modules and UI Components to JavaScript.
 
 - [Getting Started](#getting-started)
   - [Native Module](#native-module)
