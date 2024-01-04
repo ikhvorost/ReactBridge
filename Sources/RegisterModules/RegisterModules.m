@@ -35,15 +35,18 @@ static void registerModules(void) {
   
   for (int i = 0; i < numClasses; i++) {
     Class class = classes[i];
-    @try {
-      Method method = class_getClassMethod(class, selector);
-      if (method != NULL) {
+    
+    int numMethods = 0;
+    Method *methods = class_copyMethodList(object_getClass(class), &numMethods);
+    for (int j = 0; j < numMethods; j++) {
+      Method method = methods[j];
+      if (sel_isEqual(method_getName(method), selector)) {
         IMP imp = method_getImplementation(method);
-        ((id (*)(Class, SEL))imp)(class, selector);
+        ((void (*)(Class, SEL))imp)(class, selector);
+        continue;
       }
     }
-    @catch(id exception) {
-    }
+    free(methods);
   }
   free(classes);
 }
