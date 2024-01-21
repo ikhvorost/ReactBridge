@@ -29,15 +29,18 @@ import CompilerPluginSupport
 
 let package = Package(
   name: "ReactBridge",
-  platforms: [.macOS(.v10_15), .iOS(.v12), .tvOS(.v12), .watchOS(.v4), .macCatalyst(.v13)],
+  platforms: [
+    .iOS(.v13),
+    .macOS(.v10_15),
+    .tvOS(.v13),
+    .visionOS(.v1),
+    .watchOS(.v6)
+  ],
   products: [
-    .library(
-      name: "ReactBridge",
-      targets: ["ReactBridge"]
-    )
+    .library(name: "ReactBridge", targets: ["ReactBridge"])
   ],
   dependencies: [
-    .package(url: "https://github.com/apple/swift-syntax.git", from: "509.0.0"),
+    .package(url: "https://github.com/apple/swift-syntax.git", from: "509.1.0")
   ],
   targets: [
     .macro(
@@ -54,7 +57,10 @@ let package = Package(
     .target(name: "RegisterModules"),
     .testTarget(
       name: "ReactBridgeTests",
-      dependencies: ["ReactBridgeMacros", "ReactBridge", .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")]
+      dependencies: [
+        "ReactBridgeMacros",
+        .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
+      ]
     ),
   ],
   swiftLanguageVersions: [.v5]

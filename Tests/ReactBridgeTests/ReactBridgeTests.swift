@@ -1,8 +1,12 @@
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-@testable import ReactBridgeMacros
 
+// Macro implementations build for the host, so the corresponding module is not available when cross-compiling. 
+// Cross-compiled tests may still make use of the macro itself in end-to-end tests.
+#if DEBUG && canImport(ReactBridgeMacros)
+
+@testable import ReactBridgeMacros
 
 final class ReactMethodTests: XCTestCase {
   
@@ -736,3 +740,4 @@ final class ReactViewTests: XCTestCase {
   }
 }
 
+#endif
