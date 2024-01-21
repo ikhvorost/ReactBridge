@@ -36,7 +36,7 @@ static void registerModules(void) {
   for (int i = 0; i < numClasses; i++) {
     Class class = classes[i];
     
-    int numMethods = 0;
+    unsigned int numMethods = 0;
     Method *methods = class_copyMethodList(object_getClass(class), &numMethods);
     for (int j = 0; j < numMethods; j++) {
       Method method = methods[j];
