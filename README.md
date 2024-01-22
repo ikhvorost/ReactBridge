@@ -1,7 +1,7 @@
 # ReactBridge
 
 [![Swift 5.9](https://img.shields.io/badge/Swift-5.9-f48041.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
-![Platforms: iOS, macOS, tvOS, visionOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20watchOS%20-blue.svg?style=flat&logo=apple)
+![Platforms: iOS, macOS, tvOS, visionOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20visionOS%20|%20watchOS%20-blue.svg?style=flat&logo=apple)
 [![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
 [![React Native: 0.60](https://img.shields.io/badge/React%20Native-0.60-61dafb.svg?style=flat&logo=react)](https://reactnative.dev/)
 [![Build](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml/badge.svg)](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml)
