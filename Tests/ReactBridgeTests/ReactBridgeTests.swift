@@ -29,6 +29,11 @@ final class ReactMethodTests: XCTestCase {
     """
   }
   
+  func test_diagnosticID() {
+    let diagnosticID = ErrorMessage.funcOnly(macroName: "ReactMethod").diagnosticID
+    XCTAssert("\(diagnosticID)" == #"MessageID(domain: "ReactBridge", id: "ReactBridge: @ReactMethod can only be applied to a func")"#)
+  }
+  
   func test_var() {
     let diagnostic = DiagnosticSpec(message: ErrorMessage.funcOnly(macroName: "ReactMethod").message, line: 2, column: 3)
     

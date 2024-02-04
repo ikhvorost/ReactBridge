@@ -104,7 +104,7 @@ extension ReactModule: MemberMacro {
       ]
       
       if let queue = arguments["methodQueue"]?.stringValue {
-        items.append(methodQueue(queue: queue))
+        items.append(methodQueue(queue: queue, override: override))
       }
       
       return items

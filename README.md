@@ -136,6 +136,46 @@ Calendar.createEvent('Wedding', 'Las Vegas')
   });
 ```
 
+**Inheritance**
+
+It's possible inherit an other native module (which implements `RCTBridgeModule` protocol) and override existing or append additional functionality. For instance, to signal events to JavaScript you can subclass `RCTEventEmitter`:
+
+``` swift
+@ReactModule
+class EventEmitter: RCTEventEmitter {
+  
+  static private(set) var shared: EventEmitter?
+  
+  override init() {
+    super.init()
+    Self.shared = self
+  }
+  
+  override func supportedEvents() -> [String]! {
+    ["EventReminder"]
+  }
+  
+  func sendReminderEvent(title: String) {
+    sendEvent(withName: "EventReminder", body: ["title" : title])
+  }
+}
+
+...
+
+EventEmitter.shared?.sendReminderEvent(title: "Dinner Party")
+```
+
+Then in JavaScript you can create `NativeEventEmitter` with your module and subscribe to a particular event:
+
+``` js
+const { EventEmitter } = NativeModules;
+
+this.eventEmitter = new NativeEventEmitter(EventEmitter);
+this.emitterSubscription = this.eventEmitter.addListener('EventReminder', event => {
+  console.log(event); // Prints: { title: 'Dinner Party' }
+});
+```
+
 For more details about Native Modules, see: https://reactnative.dev/docs/native-modules-ios.
 
 ### Native UI Component
