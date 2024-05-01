@@ -564,8 +564,14 @@ final class ReactPropertyTests: XCTestCase {
         var set: Set<String>?
       
         @ReactProperty
+        var onBoundsChange: RCTDirectEventBlock?
+
+        @ReactProperty
         var onData: RCTBubblingEventBlock?
-      
+
+        @ReactProperty
+        var onSelection: RCTCapturingEventBlock?
+
         @ReactProperty(keyPath: "muted")
         var isMute: Bool?
       }
@@ -600,9 +606,15 @@ final class ReactPropertyTests: XCTestCase {
         var set: Set<String>?
       
         \(propConfig(name: "set", objcType: "NSSet"))
+        var onBoundsChange: RCTDirectEventBlock?
+
+        \(propConfig(name: "onBoundsChange", objcType: "RCTDirectEventBlock"))
         var onData: RCTBubblingEventBlock?
       
         \(propConfig(name: "onData", objcType: "RCTBubblingEventBlock"))
+        var onSelection: RCTCapturingEventBlock?
+
+        \(propConfig(name: "onSelection", objcType: "RCTCapturingEventBlock"))
         var isMute: Bool?
       
         \(propConfig(name: "isMute", objcType: "BOOL", keyPath: "muted"))

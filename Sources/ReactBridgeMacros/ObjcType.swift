@@ -64,7 +64,9 @@ fileprivate let blockMap: [String : [String]] = [
   "RCTResponseErrorBlock": [],
   "RCTPromiseResolveBlock": [],
   "RCTPromiseRejectBlock": [],
+  "RCTDirectEventBlock": [],
   "RCTBubblingEventBlock": [],
+  "RCTCapturingEventBlock": [],
 ]
 
 fileprivate func objcType(swiftType: String, map: [String : [String]]) -> String? {

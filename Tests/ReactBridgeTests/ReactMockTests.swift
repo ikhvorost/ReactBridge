@@ -1,6 +1,8 @@
 import Foundation
 
+typealias RCTDirectEventBlock = ([String : Any]) -> Void
 typealias RCTBubblingEventBlock = ([String : Any]) -> Void
+typealias RCTCapturingEventBlock = ([String : Any]) -> Void
 typealias RCTPromiseResolveBlock = (Any) -> Void
 typealias RCTPromiseRejectBlock = (String, String, NSError) -> Void
 
