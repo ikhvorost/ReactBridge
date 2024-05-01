@@ -20,7 +20,7 @@ final class ReactMethodTests: XCTestCase {
         struct Static {
           static let jsName = strdup("\(jsName ?? name)")
           static let objcName = strdup("\(selector)")
-          static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(isSync))
+          nonisolated (unsafe) static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(isSync))
         }
         return withUnsafePointer(to: &Static.methodInfo) {
             $0

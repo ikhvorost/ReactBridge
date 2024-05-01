@@ -45,7 +45,7 @@ extension ReactMethod: PeerMacro {
       struct Static {
         static let jsName = strdup(\(raw: jsName))
         static let objcName = strdup("\(raw: objcName)")
-        static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(raw: isSync))
+        nonisolated (unsafe) static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(raw: isSync))
       }
       return withUnsafePointer(to: &Static.methodInfo) { $0 }
     }
