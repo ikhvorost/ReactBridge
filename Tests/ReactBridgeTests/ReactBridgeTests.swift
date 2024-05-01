@@ -476,7 +476,14 @@ final class ReactPropertyTests: XCTestCase {
   }
   
   func test_multiple() {
-    let diagnostic = DiagnosticSpec(message: ErrorMessage.varSingleOnly(macroName: "ReactProperty").message, line: 3, column: 7)
+    // SwiftSyntaxMacroExpansion
+    enum MacroApplicationError: String {
+      //case accessorMacroOnVariableWithMultipleBindings = "accessor macro can only be applied to a single variable"
+      case peerMacroOnVariableWithMultipleBindings = "peer macro can only be applied to a single variable"
+      //case malformedAccessor = "macro returned a malformed accessor. Accessors should start with an introducer like 'get' or 'set'."
+    }
+    
+    let diagnostic = DiagnosticSpec(message: MacroApplicationError.peerMacroOnVariableWithMultipleBindings.rawValue, line: 2, column: 3)
     
     assertMacroExpansion(
       """
