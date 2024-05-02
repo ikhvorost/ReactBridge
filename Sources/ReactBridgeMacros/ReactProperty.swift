@@ -48,11 +48,21 @@ extension ReactProperty: PeerMacro {
   throws -> [DeclSyntax] {
     do {
       // Error: var
-      guard let varDecl = declaration.as(VariableDeclSyntax.self), let item = varDecl.bindings.first, let type = item.typeAnnotation?.type else {
+      guard let varDecl = declaration.as(VariableDeclSyntax.self) else {
         throw Diagnostic(node: declaration, message: ErrorMessage.varOnly(macroName: "\(self)"))
       }
       
+      // Error: single var
+      guard varDecl.bindings.count == 1, let item = varDecl.bindings.first else {
+        throw Diagnostic(node: varDecl.bindings, message: ErrorMessage.varSingleOnly(macroName: "\(self)"))
+      }
+      
       let name = "\(item.pattern.trimmed)"
+      
+      // Error: no type
+      guard let type = item.typeAnnotation?.type else {
+        throw Diagnostic(node: item, message: ErrorMessage.varNoType(name: name))
+      }
       let objcType = try type.objcType()
       
       let arguments = node.arguments()

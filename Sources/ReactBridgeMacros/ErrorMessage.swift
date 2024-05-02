@@ -34,6 +34,8 @@ enum ErrorMessage: DiagnosticMessage {
   case funcOnly(macroName: String)
   case classOnly(macroName: String)
   case varOnly(macroName: String)
+  case varSingleOnly(macroName: String)
+  case varNoType(name: String)
   case objcOnly(name: String)
   case mustInherit(className: String, superclassName: String)
   case mustConform(className: String, protocolName: String)
@@ -45,7 +47,16 @@ enum ErrorMessage: DiagnosticMessage {
   
   var severity: DiagnosticSeverity {
     switch self {
-      case .funcOnly, .classOnly, .varOnly, .objcOnly, .unsupportedType, .mustInherit, .mustConform, .mustBeClass:
+      case .funcOnly, 
+          .classOnly,
+          .varOnly,
+          .varSingleOnly,
+          .varNoType,
+          .objcOnly,
+          .unsupportedType,
+          .mustInherit,
+          .mustConform,
+          .mustBeClass:
         return .error
       case .nonSync:
         return .warning
@@ -60,7 +71,11 @@ enum ErrorMessage: DiagnosticMessage {
       case .classOnly(let macroName):
         "@\(macroName) can only be applied to a class"
       case .varOnly(let macroName):
-        "@\(macroName) can only be applied to a var"
+        "@\(macroName) can only be applied to a variable"
+      case .varSingleOnly(let macroName):
+        "@\(macroName) can only be applied to a single variable"
+      case .varNoType(let name):
+        "'\(name)' has not been given an explicit type"
       case .objcOnly(let name):
         "'\(name)' must be marked with '@objc'"
       case .mustInherit(let className, let superclassName):
