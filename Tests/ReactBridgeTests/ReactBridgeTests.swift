@@ -484,6 +484,27 @@ final class ReactPropertyTests: XCTestCase {
     )
   }
   
+  func test_no_type() {
+    let diagnostic = DiagnosticSpec(message: ErrorMessage.varNoType(name: "a").message, line: 3, column: 7)
+    
+    assertMacroExpansion(
+      """
+      class View {
+        @ReactProperty
+        let a = 10
+      }
+      """,
+      expandedSource:
+      """
+      class View {
+        let a = 10
+      }
+      """,
+      diagnostics: [diagnostic],
+      macros: macros
+    )
+  }
+  
   func test_multiple() {
     // SwiftSyntaxMacroExpansion
     enum MacroApplicationError: String {
