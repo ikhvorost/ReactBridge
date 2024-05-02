@@ -1,11 +1,12 @@
 # ReactBridge
 
-[![Swift 5.9](https://img.shields.io/badge/Swift-5.9-f48041.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
+[![Swift 5.10, 5.9](https://img.shields.io/badge/Swift-5.10%20|%205.9-f48041.svg?style=flat&logo=swift)](https://developer.apple.com/swift)
 ![Platforms: iOS, macOS, tvOS, visionOS, watchOS](https://img.shields.io/badge/Platforms-iOS%20|%20macOS%20|%20tvOS%20|%20visionOS%20|%20watchOS%20-blue.svg?style=flat&logo=apple)
 [![Swift Package Manager: compatible](https://img.shields.io/badge/Swift%20Package%20Manager-compatible-4BC51D.svg?style=flat&logo=apple)](https://swift.org/package-manager/)
 [![React Native: 0.60](https://img.shields.io/badge/React%20Native-0.60-61dafb.svg?style=flat&logo=react)](https://reactnative.dev/)
 [![Build](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml/badge.svg)](https://github.com/ikhvorost/ReactBridge/actions/workflows/swift.yml)
 [![codecov](https://codecov.io/gh/ikhvorost/ReactBridge/graph/badge.svg?token=0MNGNA5W90)](https://codecov.io/gh/ikhvorost/ReactBridge)
+[![Swift Doc Coverage](https://img.shields.io/badge/Swift%20Doc%20Coverage-100%25-f39f37?logo=google-docs&logoColor=white)](https://github.com/ikhvorost/swift-doc-coverage)
 
 [![Donate](https://www.paypalobjects.com/en_US/i/btn/btn_donate_SM.gif)](https://www.paypal.com/donate/?hosted_button_id=TSPDD3ZAAH24C)
 
@@ -138,7 +139,7 @@ Calendar.createEvent('Wedding', 'Las Vegas')
 
 **Inheritance**
 
-It's possible inherit an other native module (which implements `RCTBridgeModule` protocol) and override existing or append additional functionality. For instance, to signal events to JavaScript you can subclass `RCTEventEmitter`:
+It's possible to inherit an other native module (which implements `RCTBridgeModule` protocol) and override existing or append additional functionality. For instance, to signal events to JavaScript you can subclass `RCTEventEmitter`:
 
 ``` swift
 @ReactModule
