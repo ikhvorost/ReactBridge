@@ -2,7 +2,8 @@ import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
 
-// Macro implementations build for the host, so the corresponding module is not available when cross-compiling. 
+
+// Macro implementations build for the host, so the corresponding module is not available when cross-compiling.
 // Cross-compiled tests may still make use of the macro itself in end-to-end tests.
 #if DEBUG && canImport(ReactBridgeMacros)
 
@@ -14,13 +15,21 @@ final class ReactMethodTests: XCTestCase {
     "ReactMethod": ReactMethod.self,
   ]
   
+  private static var nonisolatedUnsafe: String = {
+#if swift(>=5.10)
+    "nonisolated (unsafe) "
+#else
+    ""
+#endif
+  }()
+  
   func rct_export(name: String, selector: String, isSync: Bool = false, jsName: String? = nil) -> String {
     """
     @objc static func __rct_export__\(name)() -> UnsafePointer<RCTMethodInfo>? {
         struct Static {
           static let jsName = strdup("\(jsName ?? name)")
           static let objcName = strdup("\(selector)")
-          nonisolated (unsafe) static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(isSync))
+          \(Self.nonisolatedUnsafe)static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(isSync))
         }
         return withUnsafePointer(to: &Static.methodInfo) {
             $0
@@ -489,13 +498,13 @@ final class ReactPropertyTests: XCTestCase {
       """
       class View {
         @ReactProperty
-        var a, b: Int?
+        let a: Int = 10, b: Int = 20
       }
       """,
       expandedSource:
       """
       class View {
-        var a, b: Int?
+        let a: Int = 10, b: Int = 20
       }
       """,
       diagnostics: [diagnostic],
@@ -571,7 +580,13 @@ final class ReactPropertyTests: XCTestCase {
         var set: Set<String>?
       
         @ReactProperty
-        var onData: RCTBubblingEventBlock?
+        var onDirect: RCTDirectEventBlock?
+      
+        @ReactProperty
+        var onBubbling: RCTBubblingEventBlock?
+      
+        @ReactProperty
+        var onCapturing: RCTCapturingEventBlock?
       
         @ReactProperty(keyPath: "muted")
         var isMute: Bool?
@@ -607,9 +622,15 @@ final class ReactPropertyTests: XCTestCase {
         var set: Set<String>?
       
         \(propConfig(name: "set", objcType: "NSSet"))
-        var onData: RCTBubblingEventBlock?
+        var onDirect: RCTDirectEventBlock?
       
-        \(propConfig(name: "onData", objcType: "RCTBubblingEventBlock"))
+        \(propConfig(name: "onDirect", objcType: "RCTDirectEventBlock"))
+        var onBubbling: RCTBubblingEventBlock?
+      
+        \(propConfig(name: "onBubbling", objcType: "RCTBubblingEventBlock"))
+        var onCapturing: RCTCapturingEventBlock?
+      
+        \(propConfig(name: "onCapturing", objcType: "RCTCapturingEventBlock"))
         var isMute: Bool?
       
         \(propConfig(name: "isMute", objcType: "BOOL", keyPath: "muted"))
