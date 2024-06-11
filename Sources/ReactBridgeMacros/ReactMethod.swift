@@ -39,7 +39,7 @@ struct ReactMethod {
 
 extension ReactMethod: PeerMacro {
   
-  private static var nonisolatedUnsafe: String = {
+  private static let nonisolatedUnsafe: String = {
 #if swift(>=5.10)
     "nonisolated(unsafe) "
 #else

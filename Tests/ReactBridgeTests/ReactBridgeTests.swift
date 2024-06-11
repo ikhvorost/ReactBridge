@@ -15,7 +15,7 @@ final class ReactMethodTests: XCTestCase {
     "ReactMethod": ReactMethod.self,
   ]
   
-  private static var nonisolatedUnsafe: String = {
+  private static let nonisolatedUnsafe: String = {
 #if swift(>=5.10)
     "nonisolated (unsafe) "
 #else
