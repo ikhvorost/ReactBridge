@@ -1,5 +1,5 @@
 //
-//  RegisterModules.m
+//  ReactBridgeUtils.m
 //
 //  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/07/24.
 //  Copyright © 2023 Iurii Khvorost. All rights reserved.
@@ -24,9 +24,20 @@
 //
 
 #import <objc/runtime.h>
+#import <Foundation/Foundation.h>
+#import "ReactBridgeUtils.h"
 
-__attribute__((constructor))
-static void registerModules(void) {
+
+// From RCTBridgeModule.h
+typedef struct RCTMethodInfo {
+  const char * jsName;
+  const char * objcName;
+  BOOL isSync;
+} RCTMethodInfo;
+
+@implementation ReactBridgeUtils
+
++ (void)load {
   SEL selector = @selector(_registerModule);
   
   int numClasses = objc_getClassList(NULL, 0);
@@ -50,3 +61,13 @@ static void registerModules(void) {
   }
   free(classes);
 }
+
++ (const void *)methodInfo:(NSString *)jsName objcName:(NSString *)objcName isSync:(BOOL)isSync {
+  RCTMethodInfo* methodInfo = malloc(sizeof(RCTMethodInfo));
+  methodInfo->jsName = strdup([jsName cStringUsingEncoding: NSUTF8StringEncoding]);
+  methodInfo->objcName = strdup([objcName cStringUsingEncoding: NSUTF8StringEncoding]);
+  methodInfo->isSync = isSync;
+  return methodInfo;
+}
+
+@end

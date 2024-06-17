@@ -1,0 +1,3 @@
+module ReactBridgeUtils {
+  header "ReactBridgeUtils.h"
+}

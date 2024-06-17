@@ -24,6 +24,7 @@
 //
 
 import Foundation
+@_exported import ReactBridgeUtils
 
 
 /// The macro exports and registers a class as a native module for React Native.

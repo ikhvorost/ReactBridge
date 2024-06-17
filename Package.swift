@@ -52,9 +52,9 @@ let package = Package(
     ),
     .target(
       name: "ReactBridge",
-      dependencies: ["ReactBridgeMacros", "RegisterModules"]
+      dependencies: ["ReactBridgeMacros", "ReactBridgeUtils"]
     ),
-    .target(name: "RegisterModules"),
+    .target(name: "ReactBridgeUtils"),
     .testTarget(
       name: "ReactBridgeTests",
       dependencies: [
