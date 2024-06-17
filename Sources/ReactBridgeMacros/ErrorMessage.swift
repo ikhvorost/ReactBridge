@@ -27,7 +27,7 @@ import SwiftDiagnostics
 import SwiftSyntax
 
 
-extension Diagnostic: Error {}
+extension SwiftDiagnostics.Diagnostic: Swift.Error {}
 
 enum ErrorMessage: DiagnosticMessage {
   // Errors
