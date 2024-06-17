@@ -27,35 +27,22 @@ import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
 
+
 fileprivate extension String {
   var uppercasedFirst: String {
     prefix(1).uppercased() + dropFirst()
   }
 }
 
-
 struct ReactMethod {
 }
 
 extension ReactMethod: PeerMacro {
   
-  private static var nonisolatedUnsafe: String = {
-#if swift(>=5.10)
-    "nonisolated(unsafe) "
-#else
-    ""
-#endif
-  }()
-  
   static func reactExport(funcName: String, jsName: String, objcName: String, isSync: Bool) -> DeclSyntax {
     """
-    @objc static func __rct_export__\(raw: funcName)() -> UnsafePointer<RCTMethodInfo>? {
-      struct Static {
-        static let jsName = strdup(\(raw: jsName))
-        static let objcName = strdup("\(raw: objcName)")
-        \(raw: Self.nonisolatedUnsafe)static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(raw: isSync))
-      }
-      return withUnsafePointer(to: &Static.methodInfo) { $0 }
+    @objc static func __rct_export__\(raw: funcName)() -> UnsafeRawPointer {
+      ReactBridgeUtils.methodInfo(\(raw: jsName), objcName: "\(raw: objcName)", isSync: \(raw: isSync))
     }
     """
   }

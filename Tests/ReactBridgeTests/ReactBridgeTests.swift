@@ -25,15 +25,8 @@ final class ReactMethodTests: XCTestCase {
   
   func rct_export(name: String, selector: String, isSync: Bool = false, jsName: String? = nil) -> String {
     """
-    @objc static func __rct_export__\(name)() -> UnsafePointer<RCTMethodInfo>? {
-        struct Static {
-          static let jsName = strdup("\(jsName ?? name)")
-          static let objcName = strdup("\(selector)")
-          \(Self.nonisolatedUnsafe)static var methodInfo = RCTMethodInfo(jsName: jsName, objcName: objcName, isSync: \(isSync))
-        }
-        return withUnsafePointer(to: &Static.methodInfo) {
-            $0
-        }
+    @objc static func __rct_export__\(name)() -> UnsafeRawPointer {
+        ReactBridgeUtils.methodInfo("\(jsName ?? name)", objcName: "\(selector)", isSync: \(isSync))
       }
     """
   }
