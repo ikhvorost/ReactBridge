@@ -51,17 +51,15 @@ static void class_performClassSelector(Class class, SEL selector) {
 
 __attribute__((constructor))
 static void load() {
-  dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
-    SEL selector = @selector(_registerModule);
-    int numClasses = objc_getClassList(NULL, 0);
-    Class* classes = (Class *)malloc(sizeof(Class) * numClasses);
-    numClasses = objc_getClassList(classes, numClasses);
-    for (int i = 0; i < numClasses; i++) {
-      Class class = classes[i];
-      class_performClassSelector(class, selector);
-    }
-    free(classes);
-  });
+  SEL selector = @selector(_registerModule);
+  int numClasses = objc_getClassList(NULL, 0);
+  Class* classes = (Class *)malloc(sizeof(Class) * numClasses);
+  numClasses = objc_getClassList(classes, numClasses);
+  for (int i = 0; i < numClasses; i++) {
+    Class class = classes[i];
+    class_performClassSelector(class, selector);
+  }
+  free(classes);
 }
 
 @implementation ReactBridgeUtils

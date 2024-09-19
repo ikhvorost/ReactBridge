@@ -15,14 +15,6 @@ final class ReactMethodTests: XCTestCase {
     "ReactMethod": ReactMethod.self,
   ]
   
-  private static var nonisolatedUnsafe: String = {
-#if swift(>=5.10)
-    "nonisolated (unsafe) "
-#else
-    ""
-#endif
-  }()
-  
   func rct_export(name: String, selector: String, isSync: Bool = false, jsName: String? = nil) -> String {
     """
     @objc static func __rct_export__\(name)() -> UnsafeRawPointer {
