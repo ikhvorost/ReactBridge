@@ -42,9 +42,9 @@ static void class_performClassSelector(Class class, SEL selector) {
   let methods = class_copyMethodList(object_getClass(class), &count);
   
   for (var i = 0; i < count; i++) {
-    let method = methods[i];
-    let methodName = method_getName(method);
-    if (sel_isEqual(methodName, selector)) {
+    Method method = methods[i];
+    let methodSelector = method_getName(method);
+    if (sel_isEqual(methodSelector, selector)) {
       let imp = method_getImplementation(method);
       ((void (*)(Class, SEL))imp)(class, selector);
       break;
@@ -58,9 +58,6 @@ __attribute__((constructor))
 static void load() {
   let selector = @selector(_registerModule);
   
-  let processName = [NSProcessInfo.processInfo.processName cStringUsingEncoding: NSUTF8StringEncoding];
-  let processNameLength = strlen(processName);
-  
   var count = objc_getClassList(NULL, 0);
   let classes = (Class *)malloc(sizeof(Class) * count);
   count = objc_getClassList(classes, count);
@@ -68,7 +65,8 @@ static void load() {
   dispatch_apply(count, DISPATCH_APPLY_AUTO, ^(size_t index) {
     Class class = classes[index];
     let className = class_getName(class);
-    if (strncmp(processName, className, processNameLength) == 0) {
+    // Check only swift classes
+    if (strstr(className, ".")) {
       class_performClassSelector(class, selector);
     }
   });
