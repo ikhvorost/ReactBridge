@@ -55,8 +55,7 @@ let package = Package(
       dependencies: ["ReactBridgeMacros", "ReactBridgeUtils"]
     ),
     .target(
-      name: "ReactBridgeUtils",
-      cSettings: [.define("SymbolLinkageMarkers")]
+      name: "ReactBridgeUtils"
     ),
     .testTarget(
       name: "ReactBridgeTests",

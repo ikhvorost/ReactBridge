@@ -24,8 +24,10 @@
 //
 
 #import <objc/runtime.h>
-#import <Foundation/Foundation.h>
 #import "ReactBridgeUtils.h"
+
+#define let __auto_type const
+#define var __auto_type
 
 
 // From RCTBridgeModule.h
@@ -36,29 +38,41 @@ typedef struct RCTMethodInfo {
 } RCTMethodInfo;
 
 static void class_performClassSelector(Class class, SEL selector) {
-  unsigned int numMethods = 0;
-  Method *methods = class_copyMethodList(object_getClass(class), &numMethods);
-  for (int i = 0; i < numMethods; i++) {
-    Method method = methods[i];
-    if (sel_isEqual(method_getName(method), selector)) {
-      IMP imp = method_getImplementation(method);
+  unsigned int count = 0;
+  let methods = class_copyMethodList(object_getClass(class), &count);
+  
+  for (var i = 0; i < count; i++) {
+    let method = methods[i];
+    let methodName = method_getName(method);
+    if (sel_isEqual(methodName, selector)) {
+      let imp = method_getImplementation(method);
       ((void (*)(Class, SEL))imp)(class, selector);
       break;
     }
   }
+      
   free(methods);
 }
 
 __attribute__((constructor))
 static void load() {
-  SEL selector = @selector(_registerModule);
-  int numClasses = objc_getClassList(NULL, 0);
-  Class* classes = (Class *)malloc(sizeof(Class) * numClasses);
-  numClasses = objc_getClassList(classes, numClasses);
-  for (int i = 0; i < numClasses; i++) {
-    Class class = classes[i];
-    class_performClassSelector(class, selector);
-  }
+  let selector = @selector(_registerModule);
+  
+  let processName = [NSProcessInfo.processInfo.processName cStringUsingEncoding: NSUTF8StringEncoding];
+  let processNameLength = strlen(processName);
+  
+  var count = objc_getClassList(NULL, 0);
+  let classes = (Class *)malloc(sizeof(Class) * count);
+  count = objc_getClassList(classes, count);
+  
+  dispatch_apply(count, DISPATCH_APPLY_AUTO, ^(size_t index) {
+    Class class = classes[index];
+    let className = class_getName(class);
+    if (strncmp(processName, className, processNameLength) == 0) {
+      class_performClassSelector(class, selector);
+    }
+  });
+  
   free(classes);
 }
 
