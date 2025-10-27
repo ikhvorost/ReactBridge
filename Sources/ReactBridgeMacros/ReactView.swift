@@ -33,12 +33,7 @@ struct ReactView {
 
 extension ReactView: MemberMacro {
   
-  static func expansion(
-    of node: AttributeSyntax,
-    providingMembersOf declaration: some DeclGroupSyntax,
-    in context: some MacroExpansionContext)
-  throws -> [DeclSyntax] 
-  {
+  static func expansion(of node: AttributeSyntax, providingMembersOf declaration: some DeclGroupSyntax, conformingTo protocols: [TypeSyntax], in context: some MacroExpansionContext) throws -> [DeclSyntax] {
     do {
       // Error: class
       guard let classDecl = declaration.as(ClassDeclSyntax.self) else {
