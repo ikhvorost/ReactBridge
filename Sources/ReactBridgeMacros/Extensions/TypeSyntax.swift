@@ -40,24 +40,25 @@ extension TypeSyntax {
       if let generic = identifier.genericArgumentClause {
         switch swiftType {
           case "Array":
-            if let argument = generic.arguments.first?.argument {
-              let type = try argument.objcType()
-              return .array(type)
+            if case .type(let type) = generic.arguments.first?.argument {
+              return .array(try type.objcType())
             }
             
           case "Dictionary":
-            if let keyType = try generic.arguments.first?.argument.objcType(), let valueType = try generic.arguments.last?.argument.objcType() {
-              return .dictionary(keyType, valueType)
+            if case .type(let keyType) = generic.arguments.first?.argument,
+               case .type(let valueType) = generic.arguments.last?.argument
+            {
+              return .dictionary(try keyType.objcType(), try valueType.objcType())
             }
             
           case "Set":
-            if let type = try generic.arguments.first?.argument.objcType() {
-              return .set(type)
+            if case .type(let type) = generic.arguments.first?.argument {
+              return .set(try type.objcType())
             }
             
           case "Optional":
-            if let type = try generic.arguments.first?.argument.objcType() {
-              return .optional(type)
+            if case .type(let type) = generic.arguments.first?.argument {
+              return .optional(try type.objcType())
             }
             
           default:
