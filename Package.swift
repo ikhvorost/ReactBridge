@@ -1,9 +1,9 @@
-// swift-tools-version: 5.9
+// swift-tools-version: 6.0
 //
 //  Package.swift
 //
-//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2023/10/10.
-//  Copyright © 2023 Iurii Khvorost. All rights reserved.
+//  Created by Iurii Khvorost <iurii.khvorost@gmail.com> on 2024/07/25.
+//  Copyright © 2024 Iurii Khvorost. All rights reserved.
 //
 //  Permission is hereby granted, free of charge, to any person obtaining a copy
 //  of this software and associated documentation files (the "Software"), to deal
@@ -40,7 +40,7 @@ let package = Package(
     .library(name: "ReactBridge", targets: ["ReactBridge"])
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "600.0.1")
+    .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "602.0.0")
   ],
   targets: [
     .macro(
@@ -54,7 +54,9 @@ let package = Package(
       name: "ReactBridge",
       dependencies: ["ReactBridgeMacros", "ReactBridgeUtils"]
     ),
-    .target(name: "ReactBridgeUtils"),
+    .target(
+      name: "ReactBridgeUtils"
+    ),
     .testTarget(
       name: "ReactBridgeTests",
       dependencies: [
@@ -63,5 +65,5 @@ let package = Package(
       ]
     ),
   ],
-  swiftLanguageVersions: [.v5]
+  swiftLanguageModes: [.v6]
 )
