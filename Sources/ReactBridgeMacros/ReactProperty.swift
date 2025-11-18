@@ -35,7 +35,7 @@ extension ReactProperty: PeerMacro {
   
   private static func propConfig(name: String, objcType: String, keyPath: String) -> DeclSyntax {
     """
-    @objc static func propConfig_\(raw: name)() -> [String] {
+    @objc static nonisolated func propConfig_\(raw: name)() -> [String] {
       ["\(raw: objcType)", \(raw: keyPath)]
     }
     """

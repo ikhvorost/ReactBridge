@@ -17,7 +17,7 @@ final class ReactMethodTests: XCTestCase {
   
   func rct_export(name: String, selector: String, isSync: Bool = false, jsName: String? = nil) -> String {
     """
-    @objc static func __rct_export__\(name)() -> UnsafeRawPointer {
+    @objc static nonisolated func __rct_export__\(name)() -> UnsafeRawPointer {
         ReactBridgeUtils.methodInfo("\(jsName ?? name)", objcName: "\(selector)", isSync: \(isSync))
       }
     """
@@ -314,15 +314,15 @@ final class ReactModuleTests: XCTestCase {
   func methods(name: String, requiresMainQueueSetup: Bool = false, override: Bool = false) -> String {
     """
     
-        @objc \(override ? "override " : "")class func moduleName() -> String! {
+        @objc \(override ? "override " : "")nonisolated class func moduleName() -> String! {
           "\(name)"
         }
 
-        @objc \(override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
+        @objc \(override ? "override " : "")nonisolated class func requiresMainQueueSetup() -> Bool {
           \(requiresMainQueueSetup)
         }
 
-        @objc static func _registerModule() {
+        @objc static nonisolated func _registerModule() {
           RCTRegisterModule(self);
         }
     """
@@ -425,7 +425,7 @@ final class ReactModuleTests: XCTestCase {
       class A: NSObject, RCTBridgeModule {
       \(methods(name: "Module2", requiresMainQueueSetup: true))
       
-          @objc var methodQueue: DispatchQueue {
+          @objc nonisolated var methodQueue: DispatchQueue {
             .main
           }
       }
@@ -442,7 +442,7 @@ final class ReactPropertyTests: XCTestCase {
   
   func propConfig(name: String, objcType: String, keyPath: String? = nil, isCustom: Bool = false) -> String {
     """
-    @objc static func propConfig_\(name)() -> [String] {
+    @objc static nonisolated func propConfig_\(name)() -> [String] {
         ["\(objcType)", "\(isCustom ? "__custom__" : (keyPath ?? name))"]
       }
     """
@@ -675,19 +675,19 @@ final class ReactViewTests: XCTestCase {
   func methods(name: String) -> String {
     """
     
-        @objc static func _registerModule() {
+        @objc static nonisolated func _registerModule() {
           RCTRegisterModule(self);
         }
 
-        @objc override class func moduleName() -> String! {
+        @objc override nonisolated class func moduleName() -> String! {
           "\(name)"
         }
 
-        @objc override class func requiresMainQueueSetup() -> Bool {
+        @objc override nonisolated class func requiresMainQueueSetup() -> Bool {
           true
         }
 
-        @objc override var methodQueue: DispatchQueue {
+        @objc override nonisolated var methodQueue: DispatchQueue {
           .main
         }
     """

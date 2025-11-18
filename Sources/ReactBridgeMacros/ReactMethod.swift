@@ -41,7 +41,7 @@ extension ReactMethod: PeerMacro {
   
   static func reactExport(funcName: String, jsName: String, objcName: String, isSync: Bool) -> DeclSyntax {
     """
-    @objc static func __rct_export__\(raw: funcName)() -> UnsafeRawPointer {
+    @objc static nonisolated func __rct_export__\(raw: funcName)() -> UnsafeRawPointer {
       ReactBridgeUtils.methodInfo(\(raw: jsName), objcName: "\(raw: objcName)", isSync: \(raw: isSync))
     }
     """

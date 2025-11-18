@@ -35,14 +35,14 @@ extension ReactModule: MemberMacro {
   
   static let registerModule: DeclSyntax =
     """
-    @objc static func _registerModule() {
+    @objc static nonisolated func _registerModule() {
       RCTRegisterModule(self);
     }
     """
   
   static func moduleName(name: String, override: Bool = false) -> DeclSyntax {
     """
-    @objc \(raw: override ? "override " : "")class func moduleName() -> String! {
+    @objc \(raw: override ? "override " : "")nonisolated class func moduleName() -> String! {
       \(raw: name)
     }
     """
@@ -50,7 +50,7 @@ extension ReactModule: MemberMacro {
   
   static func requiresMainQueueSetup(value: Bool, override: Bool = false) -> DeclSyntax {
     """
-    @objc \(raw: override ? "override " : "")class func requiresMainQueueSetup() -> Bool {
+    @objc \(raw: override ? "override " : "")nonisolated class func requiresMainQueueSetup() -> Bool {
       \(raw: value)
     }
     """
@@ -58,7 +58,7 @@ extension ReactModule: MemberMacro {
   
   static func methodQueue(queue: String, override: Bool = false) -> DeclSyntax {
     """
-    @objc \(raw: override ? "override " : "")var methodQueue: DispatchQueue {
+    @objc \(raw: override ? "override " : "")nonisolated var methodQueue: DispatchQueue {
       \(raw: queue)
     }
     """
