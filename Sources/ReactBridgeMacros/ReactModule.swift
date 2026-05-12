@@ -26,17 +26,28 @@
 import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
+import SwiftCompiler
 
 
 struct ReactModule {
 }
 
 extension ReactModule: MemberMacro {
+
+  static func initialize(name: String) -> DeclSyntax {
+    """
+    @section("__DATA,__mod_init_func")
+    static let initialize_\(raw: name): @convention(c) () -> Void = {
+      RCTRegisterModule(\(raw: name).self)
+    }
+    """
+  }
   
+  // Deprecated from Swift 6.3
   static let registerModule: DeclSyntax =
     """
     @objc static nonisolated func _registerModule() {
-      RCTRegisterModule(self);
+      RCTRegisterModule(self)
     }
     """
   
@@ -91,11 +102,14 @@ extension ReactModule: MemberMacro {
       
       let jsName = arguments["jsName"]?.stringValue ?? "\"\(className)\""
       let mainQueueSetup = arguments["requiresMainQueueSetup"]?.boolValue == true
+      let initialize = SwiftCompiler.isVersion63()
+        ? initialize(name: className)
+        : registerModule
       
       var items: [DeclSyntax] = [
+        initialize,
         moduleName(name: jsName, override: override),
         requiresMainQueueSetup(value: mainQueueSetup, override: override),
-        registerModule
       ]
       
       if let queue = arguments["methodQueue"]?.stringValue {

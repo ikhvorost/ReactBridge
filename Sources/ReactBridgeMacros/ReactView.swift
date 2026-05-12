@@ -26,6 +26,7 @@
 import SwiftSyntax
 import SwiftSyntaxMacros
 import SwiftDiagnostics
+import SwiftCompiler
 
 
 struct ReactView {
@@ -47,9 +48,12 @@ extension ReactView: MemberMacro {
       }
       
       let jsName = node.arguments()["jsName"]?.stringValue ?? "\"\(className)\""
+      let initialize = SwiftCompiler.isVersion63()
+        ? ReactModule.initialize(name: className)
+        : ReactModule.registerModule
       
       return [
-        ReactModule.registerModule,
+        initialize,
         ReactModule.moduleName(name: jsName, override: true),
         ReactModule.requiresMainQueueSetup(value: true, override: true),
         ReactModule.methodQueue(queue: ".main", override: true)

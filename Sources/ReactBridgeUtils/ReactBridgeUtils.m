@@ -26,6 +26,8 @@
 #import <objc/runtime.h>
 #import "ReactBridgeUtils.h"
 
+@import SwiftCompiler;
+
 #define let __auto_type const
 #define var __auto_type
 
@@ -56,6 +58,11 @@ static void class_performClassSelector(Class class, SEL selector) {
 
 __attribute__((constructor))
 static void load() {
+  // Use module initialization functions (constructors) for Swift 6.3 or later
+  if (SwiftCompiler.isVersion63) {
+    return;
+  }
+  
   let selector = @selector(_registerModule);
   
   var count = objc_getClassList(NULL, 0);

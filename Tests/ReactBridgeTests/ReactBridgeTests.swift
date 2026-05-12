@@ -1,7 +1,7 @@
 import SwiftSyntaxMacros
 import SwiftSyntaxMacrosTestSupport
 import XCTest
-
+import SwiftCompiler
 
 // Macro implementations build for the host, so the corresponding module is not available when cross-compiling.
 // Cross-compiled tests may still make use of the macro itself in end-to-end tests.
@@ -305,25 +305,40 @@ final class ReactMethodTests: XCTestCase {
   
 }
 
+func initializeModule(name: String) -> String {
+  SwiftCompiler.isVersion63()
+    ?
+      """
+      @section("__DATA,__mod_init_func")
+          static let initialize_\(name): @convention(c) () -> Void = {
+            RCTRegisterModule(\(name).self)
+          }
+      """
+    :
+      """
+      @objc static nonisolated func _registerModule() {
+            RCTRegisterModule(self)
+          }
+      """
+}
+
 final class ReactModuleTests: XCTestCase {
   
   private let macros: [String: Macro.Type] = [
     "ReactModule": ReactModule.self
   ]
   
-  func methods(name: String, requiresMainQueueSetup: Bool = false, override: Bool = false) -> String {
+  func methods(className: String, jsName: String? = nil, requiresMainQueueSetup: Bool = false, override: Bool = false) -> String {
     """
     
+        \(initializeModule(name: className))
+    
         @objc \(override ? "override " : "")nonisolated class func moduleName() -> String! {
-          "\(name)"
+          "\(jsName ?? className)"
         }
 
         @objc \(override ? "override " : "")nonisolated class func requiresMainQueueSetup() -> Bool {
           \(requiresMainQueueSetup)
-        }
-
-        @objc static nonisolated func _registerModule() {
-          RCTRegisterModule(self);
         }
     """
   }
@@ -389,7 +404,7 @@ final class ReactModuleTests: XCTestCase {
       expandedSource:
       """
       class Module: NSObject, RCTBridgeModule {
-      \(methods(name: "Module"))
+      \(methods(className: "Module"))
       }
       """,
       macros: macros
@@ -406,7 +421,7 @@ final class ReactModuleTests: XCTestCase {
       expandedSource:
       """
       class Module: RCTEventEmitter {
-      \(methods(name: "Module", override: true))
+      \(methods(className: "Module", override: true))
       }
       """,
       macros: macros
@@ -423,7 +438,7 @@ final class ReactModuleTests: XCTestCase {
       expandedSource:
       """
       class A: NSObject, RCTBridgeModule {
-      \(methods(name: "Module2", requiresMainQueueSetup: true))
+      \(methods(className: "A", jsName: "Module2", requiresMainQueueSetup: true))
       
           @objc nonisolated var methodQueue: DispatchQueue {
             .main
@@ -672,15 +687,13 @@ final class ReactViewTests: XCTestCase {
     "ReactView": ReactView.self,
   ]
   
-  func methods(name: String) -> String {
+  func methods(className: String, jsName: String? = nil) -> String {
     """
     
-        @objc static nonisolated func _registerModule() {
-          RCTRegisterModule(self);
-        }
+        \(initializeModule(name: className))
 
         @objc override nonisolated class func moduleName() -> String! {
-          "\(name)"
+          "\(jsName ?? className)"
         }
 
         @objc override nonisolated class func requiresMainQueueSetup() -> Bool {
@@ -737,7 +750,7 @@ final class ReactViewTests: XCTestCase {
       expandedSource:
       """
       class View: RCTViewManager {
-      \(methods(name: "View"))
+      \(methods(className: "View"))
       }
       """,
       macros: macros
@@ -754,7 +767,7 @@ final class ReactViewTests: XCTestCase {
       expandedSource:
       """
       class View: RNCWebViewManager {
-      \(methods(name: "View"))
+      \(methods(className: "View"))
       }
       """,
       macros: macros
@@ -771,7 +784,7 @@ final class ReactViewTests: XCTestCase {
       expandedSource:
       """
       class View: RCTViewManager {
-      \(methods(name: "MyView"))
+      \(methods(className: "View", jsName: "MyView"))
       }
       """,
       macros: macros

@@ -40,7 +40,7 @@ import Foundation
 ///   - requiresMainQueueSetup: Let React Native know if your module needs to be initialized on the main queue, before any JavaScript code executes. If value is `false` an class initializer will be called on a global queue. Defaults to `false`.
 ///   - methodQueue: The queue that will be used to call all exported methods. By default exported methods will call on a global queue.
 ///
-@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
+@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue), prefixed(initialize_))
 public macro ReactModule(
   jsName: String? = nil,
   requiresMainQueueSetup: Bool = false,
@@ -80,7 +80,7 @@ public macro ReactMethod(jsName: String? = nil, isSync: Bool = false) = #externa
 /// - Parameters:
 ///   - jsName: JavaScript UI component name. If omitted, the JavaScript UI component name will match the class name.
 ///
-@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue))
+@attached(member, names: named(_registerModule), named(moduleName), named(requiresMainQueueSetup), named(methodQueue), prefixed(initialize_))
 public macro ReactView(jsName: String? = nil) = #externalMacro(module: "ReactBridgeMacros", type: "ReactView")
 
 /// The macro exports a property of a native view to JavaScript.

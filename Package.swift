@@ -40,14 +40,15 @@ let package = Package(
     .library(name: "ReactBridge", targets: ["ReactBridge"])
   ],
   dependencies: [
-    .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.0")
+    .package(url: "https://github.com/swiftlang/swift-syntax.git", from: "603.0.1")
   ],
   targets: [
     .macro(
       name: "ReactBridgeMacros",
       dependencies: [
+        "SwiftCompiler",
         .product(name: "SwiftSyntaxMacros", package: "swift-syntax"),
-        .product(name: "SwiftCompilerPlugin", package: "swift-syntax")
+        .product(name: "SwiftCompilerPlugin", package: "swift-syntax"),
       ]
     ),
     .target(
@@ -55,12 +56,17 @@ let package = Package(
       dependencies: ["ReactBridgeMacros", "ReactBridgeUtils"]
     ),
     .target(
-      name: "ReactBridgeUtils"
+      name: "ReactBridgeUtils",
+      dependencies: ["SwiftCompiler"]
+    ),
+    .target(
+      name: "SwiftCompiler"
     ),
     .testTarget(
       name: "ReactBridgeTests",
       dependencies: [
         "ReactBridgeMacros",
+        "SwiftCompiler",
         .product(name: "SwiftSyntaxMacrosTestSupport", package: "swift-syntax")
       ]
     ),
